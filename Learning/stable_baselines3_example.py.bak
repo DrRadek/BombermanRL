@@ -118,9 +118,8 @@ env = StableBaselinesGodotEnv(env_path=args.env_path, show_window=args.viz, n_pa
 env = VecMonitor(env)
 
 if args.resume_model_path is None:
-    #"my"
     #model = PPO("MultiInputPolicy", env, ent_coef=0.01, verbose=2, n_steps=128, learning_rate=2.5e-4, clip_range=0.1, vf_coef=0.5, n_epochs=4, batch_size=256, tensorboard_log=args.experiment_dir)
-    model = PPO("MultiInputPolicy", env, ent_coef=0.0001, verbose=2, n_steps=32, tensorboard_log=args.experiment_dir)
+    model = PPO("MultiInputPolicy", env, ent_coef=0.0001, verbose=2, n_steps=32, tensorboard_log=args.experiment_dir)#my
 else:
     path_zip = pathlib.Path(args.resume_model_path)
     print("Loading model: " + os.path.abspath(path_zip))

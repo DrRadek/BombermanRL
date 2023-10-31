@@ -57,8 +57,8 @@ public partial class GameManager : Node3D
 
 
     //public Godot.Collections.Array<Godot.Collections.Array<Godot.Collections.Array<int>>> mapSensor = new();
-    public Godot.Collections.Array<int> mapSensor = new();
-    public Godot.Collections.Array<int> playerMapSensor = new();
+    public Godot.Collections.Array<float> mapSensor = new();
+    public Godot.Collections.Array<float> playerMapSensor = new();
     //public int[,] mapSensor = new int[arenaSize, arenaSize];
 
     public class GridIndexes
@@ -174,7 +174,7 @@ public partial class GameManager : Node3D
 
         for (int i = 0; i  < players.Count; i++)
         {
-            players[i].MyID = i;
+            players[i].playerIndex = i;
             lastPlayerPositions[i] = new Vector3I(0,0,0);
         }
 
@@ -240,7 +240,7 @@ public partial class GameManager : Node3D
 
             //if(lastPos.X != int.MaxValue)
             //    UpdatePlayerCell(lastPos, 0);
-            UpdatePlayerCell(pos, player.TeamID);
+            UpdatePlayerCell(pos, player.GetID());
             lastPlayerPositions[i] = pos;
         }
 
@@ -299,21 +299,21 @@ public partial class GameManager : Node3D
 
 
 
-        for(int i = 0; i < 1; i++)
+        for(int i = 0; i < 30; i++)
         {
             //UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
             //UpdateMapCell(GetRandomInnerCell(), GridIndexes.indestructibleWall);
             var cell = GetRandomInnerCell();
-            for (int zz = -1; zz <= 1; zz++)
-            {
-                for (int xx = -1; xx <= 1; xx++)
-                {
-                    var newCell = cell + new Vector3I(xx, 0, zz);
-                    if(IsInnerCell(newCell))
-                        UpdateMapCell(newCell, GridIndexes.collectible1);
-                }
-            }
-            
+            //for (int zz = -1; zz <= 1; zz++)
+            //{
+            //    for (int xx = -1; xx <= 1; xx++)
+            //    {
+            //        var newCell = cell + new Vector3I(xx, 0, zz);
+            //        if(IsInnerCell(newCell))
+            //            UpdateMapCell(newCell, GridIndexes.collectible1);
+            //    }
+            //}
+            UpdateMapCell(cell, GridIndexes.collectible1);
         }
 
         alivePlayerCount = playerCount;
@@ -395,12 +395,30 @@ public partial class GameManager : Node3D
     {
         gridmap.SetCellItem(pos, what);
 
+        float valueToAdd = 0;
+
+        switch (what)
+        {
+            case -1:
+                valueToAdd = 0;
+                break;
+            case GridIndexes.collectible1:
+                valueToAdd = 1;
+                break;
+            case GridIndexes.indestructibleWall:
+                valueToAdd = 0.1f; break;
+            case GridIndexes.destructibleWall:
+                valueToAdd = 0.2f;
+                break;
+
+        }
+
         //var value = mapSensor[pos.Z + arenaOffset][pos.X + arenaOffset];
         //value[0] = what + 1;
         //mapSensor[pos.Z + arenaOffset][pos.X + arenaOffset] = value;
 
         int index = (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
-        mapSensor[index] = what + 1;
+        mapSensor[index] = valueToAdd;
     }
 
     //void UpdatePlayerCell(int playerID)
@@ -425,7 +443,7 @@ public partial class GameManager : Node3D
     //    mapSensor[lastPlayerPos.Z + arenaOffset][lastPlayerPos.X + arenaOffset] = value;
     //}
 
-    void UpdatePlayerCell(Vector3I pos, int teamID)
+    void UpdatePlayerCell(Vector3I pos, float ID)
     {
         //var value = mapSensor[pos.Z + arenaOffset][pos.X + arenaOffset];
         //value[1] = teamID;
@@ -439,12 +457,12 @@ public partial class GameManager : Node3D
         }
         else
         {
-            playerMapSensor[index] = teamID;
+            playerMapSensor[index] = ID;
         }
         
     }
 
-    void AddBomb(Vector3I pos, int playerID)
+    void AddBomb(Vector3I pos, int playerIndex)
     {
         gridmap.SetCellItem(pos, GridIndexes.bomb);
 
@@ -453,7 +471,7 @@ public partial class GameManager : Node3D
         //mapSensor[pos.Z + arenaOffset][pos.X + arenaOffset] = value;
 
         int index = (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
-        playerMapSensor[index] = 8 + players[playerID].BombStrength;
+        playerMapSensor[index] = 8 + players[playerIndex].BombStrength;
     }
 
 
@@ -523,7 +541,7 @@ public partial class GameManager : Node3D
             //gridmap.SetCellItem(pos, (int)GridMap.InvalidCellItem);
         }
     }
-    Vector3I GetGridPosition(Vector3 position)
+    static public Vector3I GetGridPosition(Vector3 position)
     {
         return new Vector3I(
             (int)(position.X + 0.5f * (position.X > 0 ? 1 : -1)),

@@ -1,8 +1,7 @@
-[gd_scene load_steps=12 format=3 uid="uid://dcabf6amrltr0"]
+[gd_scene load_steps=11 format=3 uid="uid://dcabf6amrltr0"]
 
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="1_52dkk"]
 [ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_ow57k"]
-[ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="3_hobxk"]
 [ext_resource type="PackedScene" uid="uid://bjlat40nawjeq" path="res://Scenes/characterMovementTest.tscn" id="4_141m5"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="4_chest"]
 
@@ -27,7 +26,8 @@ size = Vector3(1, 1, 15)
 [node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
 script = ExtResource("1_ow57k")
 gridmap = NodePath("Map/GridMap")
-players = [NodePath("CharacterMovementTest"), NodePath("Character2")]
+playerCount = 1
+players = [NodePath("CharacterMovementTest")]
 
 [node name="Map" type="Node3D" parent="."]
 
@@ -106,14 +106,9 @@ environment = SubResource("Environment_lrv6o")
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("4_chest")
-action_repeat = 3
-speed_up = 8
-onnx_model_path = "res://Learning/model3.onnx"
-should_connect_to_server = true
+action_repeat = 1
+onnx_model_path = "res://Learning/model.onnx"
+should_use_model = true
 
 [node name="CharacterMovementTest" parent="." instance=ExtResource("4_141m5")]
 teamID = 1
-
-[node name="Character2" parent="." instance=ExtResource("3_hobxk")]
-teamID = 2
-isPlayer = true

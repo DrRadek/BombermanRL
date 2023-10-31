@@ -18,19 +18,22 @@ func get_obs() -> Dictionary:
 	var players = []
 	#print(_player)
 
-	var id = _player.myID
+	var id = _player.playerIndex
 	
 	for i in range(game_manager.maxPlayerCount):
 		if i == id:
-			var pos = game_manager.to_local(_player.position) / 10
-			player = [_player.Lives,int(_player.IsInvulnerable),_player.InvulnerabilityTime ,pos.x,pos.z]
+			var pos :Vector3 = game_manager.to_local(_player.position) / 10
+			var pos_change :Vector3 = _player.posChange
+			
+			player = [_player.GetID() , _player.Lives,int(_player.IsInvulnerable),_player.InvulnerabilityTime ,pos.x,pos.z, pos_change.x, pos_change.z]
 			continue
 		elif i >= game_manager.playerCount:
-			players.append_array([0,0,0,0,0])
+			players.append_array([0,0,0,0,0,0,0,0])
 		else:
 			var player_i = game_manager.players[i]
 			var pos =  game_manager.to_local(player_i.position) / 10
-			players.append_array([player_i.Lives, int(player_i.IsInvulnerable),player_i.InvulnerabilityTime ,pos.x,pos.z])
+			var pos_change :Vector3 = player_i.posChange
+			players.append_array([player_i.GetID(),player_i.Lives, int(player_i.IsInvulnerable),player_i.InvulnerabilityTime ,pos.x,pos.z, pos_change.x, pos_change.z])
 		
 			
 			
@@ -49,9 +52,21 @@ func get_obs() -> Dictionary:
 		}
 	}"""
 	
+	var test = []
+	test.append_array(game_manager.mapSensor)
+	test.append_array(game_manager.playerMapSensor)
+	
 	var obs = []
-	obs.append_array(game_manager.mapSensor)
-	obs.append_array(game_manager.playerMapSensor)
+	
+	var arr_size = len(test)/2
+	for i in range(arr_size):
+		obs.append(test[i])
+		obs.append(test[i] + arr_size)
+	
+	
+	
+	#obs.append_array(game_manager.mapSensor)
+	#obs.append_array(game_manager.playerMapSensor)
 	obs.append_array(player)
 	obs.append_array(players)
 	#print(obs)

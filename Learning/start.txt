@@ -3,7 +3,8 @@ python stable_baselines3_example.py --n_parallel=6 --speedup=16 --onnx_export_pa
 python stable_baselines3_example.py --n_parallel=16 --speedup=8 --onnx_export_path=model.onnx --save_model_path=bettermodel.zip --timesteps=100_000 --env_path=JumperHard.exe --resume_model_path=model.zip
 
 editor:
-python stable_baselines3_example.py --timesteps=10_000
+python stable_baselines3_example.py --timesteps=100_000
+python stable_baselines3_example.py --timesteps=100_000 --onnx_export_path=model.onnx --save_model_path=model.zip
 
 logy:
 tensorboard --logdir experiment_1

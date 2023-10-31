@@ -13,7 +13,7 @@ public partial class MovementTest : Character
         timeSinceLastPickup += delta;
         base._PhysicsProcess(delta);
         
-        if (timeSinceLastPickup >= 10 * 10)
+        if (timeSinceLastPickup >= 40)
         {
             AddReward(-1);
             gameManager.ForceEndGame();
@@ -46,13 +46,14 @@ public partial class MovementTest : Character
     {
         collected++;
         timeSinceLastPickup = 0;
-        AddReward(100);
+        AddReward(1);
         gameManager.OnCollectibleCollected(Position);
-        //if (collected == 10)
-        //{
-        //    collected = 0;
-        //    Despawn();
-        //    gameManager.OnPlayerDeath();
-        //}
+        if (collected == 30)
+        {
+            //AddReward(100);
+            collected = 0;
+            //Despawn();
+            gameManager.ForceEndGame();
+        }
     }
 }

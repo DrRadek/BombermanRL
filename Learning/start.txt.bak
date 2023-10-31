@@ -4,12 +4,13 @@ python stable_baselines3_example.py --n_parallel=16 --speedup=8 --onnx_export_pa
 
 editor:
 python stable_baselines3_example.py --timesteps=10_000
+python stable_baselines3_example.py --timesteps=100_000 --onnx_export_path=model.onnx --save_model_path=model.zip
 
 logy:
 tensorboard --logdir experiment_1
 
 hra:
-python stable_baselines3_example.py --n_parallel=3 --speedup=10 --onnx_export_path=model.onnx --save_model_path=model.zip --timesteps=100_000 --env_path=../Export/BombermanRL.exe
+python stable_baselines3_example.py --n_parallel=3 --speedup=6 --onnx_export_path=model.onnx --save_model_path=model.zip --timesteps=100_000 --env_path=../Export/BombermanRL.exe
 
 onnx model path:
 res://Learning/model.onnx

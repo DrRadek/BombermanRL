@@ -17,12 +17,17 @@ public partial class Character : CharacterBody3D
     int teamID = 0;
 
     [Export]
+    int myID;
+
+    [Export]
     bool isPlayer = false;
 
     NodePath gameManagerPath = "../Game";
     protected GameManager gameManager;
     StandardMaterial3D material;
-    
+
+    public int playerIndex;
+
     //float bombCoolDown = 0f;
     //float defaultBombCoolDown = 0f;
 
@@ -40,7 +45,9 @@ public partial class Character : CharacterBody3D
     double invulnerabilityTime = 0f;
     float invulnerabilityTimeDefault = 2f;
 
-    int myID;
+    Vector3 posChange = Vector3.Zero;
+
+    
     int maxSpawnedBombs = 0; // TODO: Add to AI parameters
     int spawnedBombs = 0; // TODO: Add to AI parameters
     int bombStrength = 0; // TODO: Add to AI parameters
@@ -53,9 +60,20 @@ public partial class Character : CharacterBody3D
     public int SpawnedBombs { get => spawnedBombs; set => spawnedBombs = value; }
     public int BombStrength { get => bombStrength; private set => bombStrength = value; }
     public int TeamID { get => teamID; private set => teamID = value; }
-    public int MyID { get => myID; set => myID = value; }
+    //public int MyID { get => myID; set => myID = value; }
     public int DefaultMaxSpawnedBombs { get => defaultMaxSpawnedBombs; protected set => defaultMaxSpawnedBombs = value; }
     public int DefaultBombStrength { get => defaultBombStrength; protected set => defaultBombStrength = value; }
+    public Vector3 PosChange { get => posChange; private set => posChange = value; }
+
+    public Vector3 GetLocalPlayerPos()
+    {
+        return Position - GameManager.GetGridPosition(Position);
+    }
+
+    public float GetID()
+    {
+        return teamID * 0.25f + myID * 0.01f;
+    }
 
     bool isAiInit = false;
 
@@ -115,7 +133,7 @@ public partial class Character : CharacterBody3D
             }
             else
             {
-                if (!gameManager.PlaceBomb(Position, MyID))
+                if (!gameManager.PlaceBomb(Position, playerIndex))
                 {
                     OnBombFailedToPlace();
                 }
@@ -130,7 +148,7 @@ public partial class Character : CharacterBody3D
 
         Vector3 velocity = Velocity;
         Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized(); ;
-
+        
 
 
         if (direction != Vector3.Zero)
@@ -144,8 +162,9 @@ public partial class Character : CharacterBody3D
             velocity.Z = Mathf.MoveToward(Velocity.Z, 0, speed);
         }
         Velocity = velocity;
-
+        var pos = Position;
         MoveAndSlide();
+        PosChange = Position - pos;
 
         if (Velocity.LengthSquared() <= Mathf.Epsilon * 10 && inputDir != Vector2.Zero)
         {
