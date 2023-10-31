@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://cyuwbw74eo612"]
+
+[ext_resource type="Script" path="res://Scripts/Character.cs" id="1_mwpwb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ykg5p"]
+radius = 0.45
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2fm4c"]
+resource_local_to_scene = true
+transparency = 1
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.85098, 0.85098, 0.85098, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_kfljh"]
+resource_local_to_scene = true
+material = SubResource("StandardMaterial3D_2fm4c")
+
+[node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("mesh", "collider")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+script = ExtResource("1_mwpwb")
+mesh = NodePath("MeshInstance3D")
+collider = NodePath("CollisionShape3D")
+teamID = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_ykg5p")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.9, 0, 0, 0, 0.9, 0, 0, 0, 0.9, 0, 0, 0)
+mesh = SubResource("CapsuleMesh_kfljh")

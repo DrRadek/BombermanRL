@@ -1,0 +1,92 @@
+[gd_scene load_steps=12 format=3 uid="uid://rpoa6rlkl5xe"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p1srx"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_318lb"]
+material = SubResource("StandardMaterial3D_p1srx")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_x33cd"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_bsp4j"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bt5e3"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_1vc31"]
+material = SubResource("StandardMaterial3D_bt5e3")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vh11o"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_m7b67"]
+material = SubResource("StandardMaterial3D_vh11o")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bmpm0"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0yrgv"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.0784314, 1, 0, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_001ig"]
+material = SubResource("StandardMaterial3D_0yrgv")
+
+[node name="Grid" type="Node3D"]
+
+[node name="Wall" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_318lb")
+
+[node name="Wall" type="StaticBody3D" parent="Wall"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Wall/Wall"]
+shape = SubResource("BoxShape3D_x33cd")
+
+[node name="WallDestroyable" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_bsp4j")
+
+[node name="WallDestroyable" type="StaticBody3D" parent="WallDestroyable"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallDestroyable/WallDestroyable"]
+shape = SubResource("BoxShape3D_x33cd")
+
+[node name="Bomb" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.8, 0, 0, 0, 0.8, 0, 0, 0, 0.8, 0, 0, 0)
+mesh = SubResource("SphereMesh_1vc31")
+
+[node name="Bomb" type="StaticBody3D" parent="Bomb"]
+transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Bomb/Bomb"]
+shape = SubResource("BoxShape3D_x33cd")
+disabled = true
+
+[node name="BombFire" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, -0.45, 0)
+mesh = SubResource("BoxMesh_m7b67")
+
+[node name="Scale3" type="Node3D" parent="BombFire"]
+transform = Transform3D(1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="BombFire" type="StaticBody3D" parent="BombFire/Scale3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BombFire/Scale3/BombFire"]
+shape = SubResource("BoxShape3D_bmpm0")
+disabled = true
+
+[node name="Pickup1" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, -0.45, 0)
+mesh = SubResource("BoxMesh_001ig")
+
+[node name="Scale3" type="Node3D" parent="Pickup1"]
+transform = Transform3D(1, 0, 0, 0, 0.1, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="BombFire" type="StaticBody3D" parent="Pickup1/Scale3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Pickup1/Scale3/BombFire"]
+shape = SubResource("BoxShape3D_bmpm0")
+disabled = true

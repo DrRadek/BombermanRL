@@ -1,0 +1,113 @@
+[gd_scene load_steps=12 format=3 uid="uid://dcabf6amrltr0"]
+
+[ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="1_52dkk"]
+[ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_ow57k"]
+[ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="3_hobxk"]
+[ext_resource type="PackedScene" uid="uid://bjlat40nawjeq" path="res://Scenes/characterMovementTest.tscn" id="4_141m5"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="4_chest"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
+size = Vector3(17, 1, 17)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bc2ts"]
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.607843, 0.709804, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rbav4"]
+material = SubResource("StandardMaterial3D_bc2ts")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_agaml"]
+size = Vector3(17, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tdlyk"]
+size = Vector3(1, 1, 15)
+
+[sub_resource type="Environment" id="Environment_lrv6o"]
+
+[node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
+script = ExtResource("1_ow57k")
+gridmap = NodePath("Map/GridMap")
+players = [NodePath("CharacterMovementTest"), NodePath("Character2")]
+
+[node name="Map" type="Node3D" parent="."]
+
+[node name="Bottom" type="StaticBody3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/Bottom"]
+shape = SubResource("BoxShape3D_a80ve")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/Bottom"]
+transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0)
+mesh = SubResource("BoxMesh_rbav4")
+
+[node name="StaticBody3D2" type="StaticBody3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 8)
+visible = false
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D2"]
+transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_rbav4")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="Map/StaticBody3D2"]
+shape = SubResource("BoxShape3D_agaml")
+
+[node name="StaticBody3D3" type="StaticBody3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -8)
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D3"]
+shape = SubResource("BoxShape3D_agaml")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D3"]
+transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_rbav4")
+
+[node name="StaticBody3D4" type="StaticBody3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.5, 0)
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D4"]
+shape = SubResource("BoxShape3D_tdlyk")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0)
+mesh = SubResource("BoxMesh_rbav4")
+
+[node name="StaticBody3D5" type="StaticBody3D" parent="Map"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 0)
+visible = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D5"]
+shape = SubResource("BoxShape3D_tdlyk")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0)
+mesh = SubResource("BoxMesh_rbav4")
+
+[node name="GridMap" type="GridMap" parent="Map"]
+mesh_library = ExtResource("1_52dkk")
+cell_size = Vector3(1, 1, 1)
+cell_center_x = false
+cell_center_z = false
+data = {
+"cells": PackedInt32Array(2, 65533, 1441792, 65533, 65534, 1441792, 65534, 2, 1441792, 3, 5, 1441792, 65535, 7, 1441792, 65532, 4, 1441792)
+}
+metadata/_editor_floor_ = Vector3(0, 0, 0)
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.139173, 0.990268, 0, -0.990268, 0.139173, 0, 11.5, 2.15)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -0.258819, 0.965926, 0, -0.965926, -0.258819, 0, 0, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_lrv6o")
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("4_chest")
+
+[node name="CharacterMovementTest" parent="." instance=ExtResource("4_141m5")]
+
+[node name="Character2" parent="." instance=ExtResource("3_hobxk")]
+teamID = 1
