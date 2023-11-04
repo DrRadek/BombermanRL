@@ -1,9 +1,8 @@
-[gd_scene load_steps=11 format=3 uid="uid://dcabf6amrltr0"]
+[gd_scene load_steps=10 format=3 uid="uid://dcabf6amrltr0"]
 
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="1_52dkk"]
 [ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_ow57k"]
 [ext_resource type="PackedScene" uid="uid://bjlat40nawjeq" path="res://Scenes/characterMovementTest.tscn" id="4_141m5"]
-[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="4_chest"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
 size = Vector3(17, 1, 17)
@@ -103,12 +102,6 @@ transform = Transform3D(1, 0, 0, 0, -0.258819, 0.965926, 0, -0.965926, -0.258819
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_lrv6o")
-
-[node name="Sync" type="Node" parent="."]
-script = ExtResource("4_chest")
-action_repeat = 1
-onnx_model_path = "res://Learning/model.onnx"
-should_use_model = true
 
 [node name="CharacterMovementTest" parent="." instance=ExtResource("4_141m5")]
 teamID = 1

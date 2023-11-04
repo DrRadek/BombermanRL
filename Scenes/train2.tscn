@@ -1,0 +1,27 @@
+[gd_scene load_steps=3 format=3 uid="uid://ccjo3p52kjfg"]
+
+[ext_resource type="PackedScene" uid="uid://dcabf6amrltr0" path="res://Scenes/game.tscn" id="1_eo2nv"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="2_t31g3"]
+
+[node name="Train" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 6, 21.8564, 16.6603)
+
+[node name="Game" parent="." instance=ExtResource("1_eo2nv")]
+
+[node name="Game2" parent="." instance=ExtResource("1_eo2nv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 0)
+
+[node name="Game3" parent="." instance=ExtResource("1_eo2nv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -21)
+
+[node name="Game4" parent="." instance=ExtResource("1_eo2nv")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, -21)
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("2_t31g3")
+action_repeat = 1
+speed_up = 4
+onnx_model_path = "res://Learning/model.onnx"
+should_connect_to_server = true

@@ -7,7 +7,7 @@ var place_bomb : int = 0
 #@onready var game_manager get_tree().current_scene
 var game_manager
 
-var map = []
+#var move_action:float = 0
 
 func init(player: Node3D):
 	_player = player
@@ -16,7 +16,7 @@ func init(player: Node3D):
 func get_obs() -> Dictionary:
 	var player = []
 	var players = []
-	#print(_player)
+	
 
 	var id = _player.playerIndex
 	
@@ -71,7 +71,10 @@ func get_obs() -> Dictionary:
 	obs.append_array(players)
 	#print(obs)
 	#print(len(obs))
+	
 	return {"obs": obs}
+	#var obs = [1,2,3,4]
+	#return {"obs":obs}
 	#return {"obs":game_manager.mapSensor, "player":player, "players":players}
 	#return {"obs":[5]}
 	
@@ -99,7 +102,7 @@ func get_obs() -> Dictionary:
 			"space": "box"
 		},
 	}"""
-	
+
 func get_reward() -> float:
 	return reward
 	
@@ -126,6 +129,13 @@ func get_action_space() -> Dictionary:
 			"action_type": "discrete"
 		}
 	}"""
+	"""return {
+		"move_action" : {
+			"size": 1,
+			"action_type": "continuous"
+		},
+	}"""
+	
 	return {
 		"move" : {
 			"size": 2,
@@ -138,6 +148,10 @@ func get_action_space() -> Dictionary:
 	}
 	
 func set_action(action) -> void:
+	#move_action = clamp(action["move_action"][0], -1.0, 1.0)
+	#return
+	
+	
 	#print(action)
 	#print(clamp(action["move"][0],0,1))
 	#print(action["move_x_pos"])

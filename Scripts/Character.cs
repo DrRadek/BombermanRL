@@ -80,13 +80,16 @@ public partial class Character : CharacterBody3D
     public override void _Ready()
     {
         OnDefaultValuesSet();
-        gameManager = (GameManager)GetTree().CurrentScene;
+        gameManager = (GameManager)GetParent(); //(GameManager)GetTree().CurrentScene;
+        aiController?.Call(aiMethodName.init, this);
+        Despawn();
+
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
         //collider.Disabled = true;
         //Visible = false;
         //lives = 0;
-        aiController?.Call(aiMethodName.init, this);
-        Despawn();
+        
+
     }
 
 
@@ -108,7 +111,7 @@ public partial class Character : CharacterBody3D
         {
             if ((bool)aiController.Get(aiPropertyName.needsReset))
             {
-                gameManager.ForceEndGame();
+                //gameManager.ForceEndGame();
                 return;
             }
 
@@ -309,7 +312,7 @@ public partial class Character : CharacterBody3D
         if(aiController != null)
         {
             aiController.Set(aiPropertyName.done, true);
-            //aiController.Set(aiPropertyName.needsReset, true);
+            aiController.Set(aiPropertyName.needsReset, true);
         }
         
         //SetProcess(false);
@@ -322,7 +325,26 @@ public partial class Character : CharacterBody3D
     public void AddReward(float reward)
     {
         if(aiController != null)
+        {
+            
             aiController.Set(aiPropertyName.reward, (float)aiController.Get(aiPropertyName.reward) + reward);
+            //GD.Print("new reward:");
+            //GD.Print(aiController.Get(aiPropertyName.reward));
+            //GD.Print("Change:");
+            //GD.Print(reward);
+        }
+            
+    }
+    public bool NeedsReset()
+    {
+        if (aiController != null)
+        {
+            return (bool)aiController.Get(aiPropertyName.needsReset);
+        }
+        else
+        {
+            return true;
+        }
     }
 }
 

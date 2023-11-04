@@ -1,0 +1,50 @@
+[gd_scene load_steps=3 format=3 uid="uid://ked3dtwuase2"]
+
+[ext_resource type="PackedScene" uid="uid://dcabf6amrltr0" path="res://Scenes/game.tscn" id="1_1aet2"]
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="2_a5qy0"]
+
+[node name="Train" type="Node3D"]
+
+[node name="Game" parent="." instance=ExtResource("1_1aet2")]
+
+[node name="Game2" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -30)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game3" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, 0)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game4" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22, 0, -30)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game5" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, 0)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game6" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 0, -30)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game7" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 0)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Game8" parent="." node_paths=PackedStringArray("gridmap", "players") instance=ExtResource("1_1aet2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, -30)
+gridmap = NodePath("../Game/Map/GridMap")
+players = [NodePath("../Game/CharacterMovementTest")]
+
+[node name="Sync" type="Node" parent="."]
+script = ExtResource("2_a5qy0")
+action_repeat = 1
+speed_up = 4
+onnx_model_path = "res://Learning/model.onnx"
+should_connect_to_server = true

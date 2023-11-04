@@ -19,3 +19,4 @@ mono_crash.*.json
 
 # Learning ignores
 Learning/logs/
+Export/

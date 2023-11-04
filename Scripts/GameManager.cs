@@ -56,6 +56,8 @@ public partial class GameManager : Node3D
     };
 
 
+    bool needsReset = false;
+
     //public Godot.Collections.Array<Godot.Collections.Array<Godot.Collections.Array<int>>> mapSensor = new();
     public Godot.Collections.Array<float> mapSensor = new();
     public Godot.Collections.Array<float> playerMapSensor = new();
@@ -178,11 +180,32 @@ public partial class GameManager : Node3D
             lastPlayerPositions[i] = new Vector3I(0,0,0);
         }
 
-        StartGame();
+        //StartGame();
+
+        //CleanGame();
+        //StartGame();
     }
 
     public override void _PhysicsProcess(double delta)
     {
+        alivePlayerCount = playerCount;
+        bool resetGame = true;
+        for (int i = 0; i < playerCount; i++)
+        {
+            var player = players[i];
+            if (!player.NeedsReset())
+            {
+                resetGame = false;
+                break;
+            }
+
+        }
+        if (resetGame)
+        {
+
+            StartGame();
+        }
+
         try
         {
             var enumerator = bombs.GetEnumerator();
@@ -244,31 +267,31 @@ public partial class GameManager : Node3D
             lastPlayerPositions[i] = pos;
         }
 
-        printDelta += delta;
-        if (printDelta >= printSpeed)
-        {
-            string message = "";
+        //printDelta += delta;
+        //if (printDelta >= printSpeed)
+        //{
+        //    string message = "";
 
-            for (int y = 0; y < arenaSize; y++)
-            {
-                for (int x = 0; x < arenaSize; x++)
-                {
-                    message += playerMapSensor[x + y * arenaSize];
-                }
+        //    for (int y = 0; y < arenaSize; y++)
+        //    {
+        //        for (int x = 0; x < arenaSize; x++)
+        //        {
+        //            message += playerMapSensor[x + y * arenaSize];
+        //        }
 
-                message += " ";
+        //        message += " ";
 
-                for (int x = 0; x < arenaSize; x++)
-                {
-                    message += mapSensor[x + y * arenaSize];
-                }
+        //        for (int x = 0; x < arenaSize; x++)
+        //        {
+        //            message += mapSensor[x + y * arenaSize];
+        //        }
 
-                message += "\n";
-            }
+        //        message += "\n";
+        //    }
 
-            GD.Print(message);
-            printDelta = 0;
-        }
+        //    GD.Print(message);
+        //    printDelta = 0;
+        //}
 
 
     }
@@ -285,9 +308,9 @@ public partial class GameManager : Node3D
         fires.Clear();
 
         Vector3I pos = new Vector3I();
-        for (int z = -arenaOffset+ 1; z < -arenaOffset + arenaSize-1; z++)
+        for (int z = -arenaOffset + 1; z < -arenaOffset + arenaSize - 1; z++)
         {
-            for (int x = -arenaOffset + 1; x < -arenaOffset + arenaSize-1; x++)
+            for (int x = -arenaOffset + 1; x < -arenaOffset + arenaSize - 1; x++)
             {
                 pos.X = x;
                 pos.Z = z;
@@ -297,9 +320,7 @@ public partial class GameManager : Node3D
             }
         }
 
-
-
-        for(int i = 0; i < 30; i++)
+        for (int i = 0; i < 30; i++)
         {
             //UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
             //UpdateMapCell(GetRandomInnerCell(), GridIndexes.indestructibleWall);
@@ -322,9 +343,12 @@ public partial class GameManager : Node3D
             var player = players[i];
             //if (players[i].Lives > 0)
             //{
-                player.Despawn();
-            //}
 
+            //}
+            
+            //player.Despawn();
+            
+            
             //players[i].Spawn(new Vector3(1, 0, 1) * (i+1)*5 - new Vector3(7, 0, 7));
             Vector3 playerPos;
             do {
@@ -388,7 +412,15 @@ public partial class GameManager : Node3D
 
     public void ForceEndGame()
     {
+        for (int i = 0; i < playerCount; i++)
+        {
+            var player = players[i];
+            //if(!(bool)player.Get(aiPropertyName.done))
+                player.Despawn();
+        }
+
         StartGame();
+        
     }
 
     void UpdateMapCell(Vector3I pos, int what)

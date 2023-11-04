@@ -13,15 +13,15 @@ public partial class MovementTest : Character
         timeSinceLastPickup += delta;
         base._PhysicsProcess(delta);
         
-        if (timeSinceLastPickup >= 40)
+        if (timeSinceLastPickup >= 5)
         {
-            AddReward(-1);
+            //AddReward(-1);
             gameManager.ForceEndGame();
         }
-        else if (timeSinceLastPickup >= 2f)
-        {
-            AddReward(-0.001f * (float)timeSinceLastPickup); // time reward
-        }
+        //else if (timeSinceLastPickup >= 2f)
+        //{
+        //    AddReward(-0.001f * (float)timeSinceLastPickup); // time reward
+        //}
     }
 
     protected override void OnDefaultValuesSet()
@@ -33,7 +33,7 @@ public partial class MovementTest : Character
     protected override void OnTriedToRunIntoObject()
     {
         //GD.Print("TRUE");
-        AddReward(-1f);
+        //AddReward(-1f);
     }
 
     public override void Spawn(Vector3 pos)
@@ -46,6 +46,7 @@ public partial class MovementTest : Character
     {
         collected++;
         timeSinceLastPickup = 0;
+
         AddReward(1);
         gameManager.OnCollectibleCollected(Position);
         if (collected == 30)

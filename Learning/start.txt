@@ -14,3 +14,16 @@ python stable_baselines3_example.py --n_parallel=3 --speedup=6 --onnx_export_pat
 
 onnx model path:
 res://Learning/model.onnx
+
+linux:
+cd /mnt/d/Projects/Godot/RL/Games/BombermanRL/Export/Linux/
+gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_workers=10 --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=10000000000 --use_rnn=True --recurrence=32
+gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_workers=8 --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=1000 --viz --pbt_optimize_gamma=True
+
+cp -r /mnt/d/Projects/Godot/RL/Games/BombermanRL/Export/Linux/ Export
+file = "/mnt/d/Projects/Godot/RL/Games/BombermanRL/Export/Linux/BombermanRL.x86_64"
+ps:
+changed \\wsl.localhost\Ubuntu\home\radek\.local\lib\python3.10\site-packages\godot_rl\core\godot_env.py
+path at line 277 to abspath: launch_cmd[0] = os.path.abspath(launch_cmd[0])
+
+alternativa: path = "./" + convert_macos_path(env_path) if platform == "darwin" else env_path
