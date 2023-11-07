@@ -14,18 +14,24 @@ func init(player: Node3D):
 	game_manager = player.gameManager
 	
 func get_obs() -> Dictionary:
+	var id = _player.playerIndex
 	var player = []
 	var players = []
 	
 
-	var id = _player.playerIndex
+	
 	
 	for i in range(game_manager.maxPlayerCount):
 		if i == id:
-			var pos :Vector3 = game_manager.to_local(_player.position) / 10
+			var pos :Vector3 = _player.GetLocalPlayerPos()  #game_manager.to_local(_player.position) / 10
 			var pos_change :Vector3 = _player.posChange
 			
-			player = [_player.GetID() , _player.Lives,int(_player.IsInvulnerable),_player.InvulnerabilityTime ,pos.x,pos.z, pos_change.x, pos_change.z]
+			#player = [_player.GetID() , _player.Lives,int(_player.IsInvulnerable),_player.InvulnerabilityTime ,pos.x,pos.z, pos_change.x, pos_change.z]
+			if _player.Lives == 0:
+				player = [0,0,0,0,0,0]
+			else:
+				player = [pos.x,pos.z, pos_change.x, pos_change.z, _player.Lives, _player.InvulnerabilityTime]
+			
 			continue
 		elif i >= game_manager.playerCount:
 			players.append_array([0,0,0,0,0,0,0,0])
@@ -52,7 +58,7 @@ func get_obs() -> Dictionary:
 		}
 	}"""
 	
-	var test = []
+	"""var test = []
 	test.append_array(game_manager.mapSensor)
 	test.append_array(game_manager.playerMapSensor)
 	
@@ -61,17 +67,35 @@ func get_obs() -> Dictionary:
 	var arr_size = len(test)/2
 	for i in range(arr_size):
 		obs.append(test[i])
-		obs.append(test[i] + arr_size)
+		obs.append(test[i + arr_size])
+	"""
 	
+	#print("ID:")
+	#print(id)
+	#print(game_manager.GetObservationsAroundPlayer(id))
 	
+	#print("before append array")
+	#print(len(game_manager.mapSensor))
+	#print(len(game_manager.playerMapObservations))
+
+	#print(len(game_manager.players))
+	#var idk = game_manager.GetObservationsAroundPlayer(id)
+
+	var obs = []
+	
+	obs.append_array(game_manager.GetObservationsAroundPlayer(id, false))
 	
 	#obs.append_array(game_manager.mapSensor)
 	#obs.append_array(game_manager.playerMapSensor)
+	
+	obs.append(0)
 	obs.append_array(player)
-	obs.append_array(players)
+	#obs.append_array(players)
+	
+	
 	#print(obs)
 	#print(len(obs))
-	
+	#print(obs)
 	return {"obs": obs}
 	#var obs = [1,2,3,4]
 	#return {"obs":obs}
@@ -108,20 +132,12 @@ func get_reward() -> float:
 	
 func get_action_space() -> Dictionary:
 	"""return {
-		"move_x_pos" : {
-			"size": 2,
+		"move_x" : {
+			"size": 3,
 			"action_type": "discrete"
 		},
-		"move_x_neg" : {
-			"size": 2,
-			"action_type": "discrete"
-		},
-		"move_y_pos" : {
-			"size": 2,
-			"action_type": "discrete"
-		},
-		"move_y_neg" : {
-			"size": 2,
+		"move_y" : {
+			"size": 3,
 			"action_type": "discrete"
 		},
 		"place_bomb" : {
@@ -129,13 +145,8 @@ func get_action_space() -> Dictionary:
 			"action_type": "discrete"
 		}
 	}"""
-	"""return {
-		"move_action" : {
-			"size": 1,
-			"action_type": "continuous"
-		},
-	}"""
 	
+
 	return {
 		"move" : {
 			"size": 2,
@@ -148,6 +159,15 @@ func get_action_space() -> Dictionary:
 	}
 	
 func set_action(action) -> void:
+	
+	#move_x = action["move_x"] - 1
+	#move_y = action["move_y"] - 1
+	#place_bomb = action["place_bomb"]
+	
+	move_x = clamp(action["move"][0], -1.0, 1.0)
+	move_y = clamp(action["move"][1], -1.0, 1.0)
+	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0.5
+	
 	#move_action = clamp(action["move_action"][0], -1.0, 1.0)
 	#return
 	
@@ -159,8 +179,7 @@ func set_action(action) -> void:
 	#move_y = action["move_y_pos"] - action["move_y_neg"] #clamp(action["move_y"],0,10)-1
 	#place_bomb = action["place_bomb"] #clamp(action["place_bomb"],0,1)
 	
-	move_x = clamp(action["move"][0], -1.0, 1.0)
-	move_y = clamp(action["move"][1], -1.0, 1.0)
+	
 	
 	#print(move_x)
 	#print(move_y)
@@ -178,7 +197,7 @@ func set_action(action) -> void:
 	#	move_y = -1
 	#else:
 	#	move_y = 0
-	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0
+	
 	#if clamp(action["place_bomb"][0],0, 1) > 0:
 	#	place_bomb = 1
 	#else:

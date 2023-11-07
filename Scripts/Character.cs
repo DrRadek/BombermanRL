@@ -22,7 +22,6 @@ public partial class Character : CharacterBody3D
     [Export]
     bool isPlayer = false;
 
-    NodePath gameManagerPath = "../Game";
     protected GameManager gameManager;
     StandardMaterial3D material;
 
@@ -31,15 +30,15 @@ public partial class Character : CharacterBody3D
     //float bombCoolDown = 0f;
     //float defaultBombCoolDown = 0f;
 
-	const float speed = 10.0f;
-    const float flickerSpeed = 0.2f;
+	const float speed = 4.0f * 2f;
+    const float flickerSpeed = 0.2f * 0.5f;
     const int maxLives = 3;
-    int defaultMaxSpawnedBombs = 0;
-    int defaultBombStrength = 1;
+    int defaultMaxSpawnedBombs = 3;
+    int defaultBombStrength = 3;
     double flickerDelta = 0;
     bool flickerFrame = false;
 
-    int lives = maxLives;
+    int lives = 0;
     //bool isAlive = true;
     bool isInvulnerable = false;
     double invulnerabilityTime = 0f;
@@ -72,7 +71,7 @@ public partial class Character : CharacterBody3D
 
     public float GetID()
     {
-        return teamID * 0.25f + myID * 0.01f;
+        return 0.5f + teamID * 0.125f + myID * 0.01f;
     }
 
     bool isAiInit = false;
@@ -80,9 +79,9 @@ public partial class Character : CharacterBody3D
     public override void _Ready()
     {
         OnDefaultValuesSet();
-        gameManager = (GameManager)GetParent(); //(GameManager)GetTree().CurrentScene;
+        gameManager = GetParent<GameManager>(); //(GameManager)GetTree().CurrentScene;
         aiController?.Call(aiMethodName.init, this);
-        Despawn();
+        //Despawn();
 
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
         //collider.Disabled = true;
@@ -195,6 +194,7 @@ public partial class Character : CharacterBody3D
             invulnerabilityTime -= delta;
             if(invulnerabilityTime <= 0)
             {
+                invulnerabilityTime = 0;
                 isInvulnerable = false;
                 flickerFrame = false;
                 flickerDelta = 0;
@@ -203,7 +203,7 @@ public partial class Character : CharacterBody3D
             material.AlbedoColor = color;
         }
 
-        switch (gameManager.GetObjectOnCell(Position))
+        switch (gameManager.GetObjectInCell(Position))
         {
             case GameManager.GridIndexes.fire:
                 HandleFireHit();
@@ -224,7 +224,7 @@ public partial class Character : CharacterBody3D
         if (!isInvulnerable)
         {
             lives -= 1;
-            GD.Print("Hit");
+            //GD.Print("Hit");
 
             isInvulnerable = true;
             flickerFrame = true;
@@ -234,14 +234,15 @@ public partial class Character : CharacterBody3D
 
             if (lives == 0)
             {
-                GD.Print("Death");
+                //GD.Print("Death");
                 Despawn();
                 gameManager.OnPlayerDeath(myID);
                 //GD.Print("Game Over for you");
 
                 //return;
             }
-            gameManager.OnPlayerHit(teamID);
+
+            gameManager.OnPlayerHit(teamID, Position);
             //OnTeamHit();
 
         }
@@ -273,6 +274,20 @@ public partial class Character : CharacterBody3D
         // AddReward(-0.01f);
     }
     public virtual void OnEnemyTeamHit()
+    {
+        // AddReward(0.01f);
+    }
+    public virtual void OnTeamWin()
+    {
+        // AddReward(0.01f);
+    }
+
+    public virtual void OnWallDestroyed()
+    {
+        // AddReward(0.01f);
+    }
+
+    public virtual void OnDangerousTileTouched(float strength)
     {
         // AddReward(0.01f);
     }
@@ -334,6 +349,11 @@ public partial class Character : CharacterBody3D
             //GD.Print(reward);
         }
             
+    }
+
+    public void SetReward(float reward)
+    {
+        aiController.Set(aiPropertyName.reward, reward);
     }
     public bool NeedsReset()
     {

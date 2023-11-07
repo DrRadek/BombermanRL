@@ -1,8 +1,7 @@
 [gd_scene load_steps=12 format=3 uid="uid://rpoa6rlkl5xe"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p1srx"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(0, 0, 0, 1)
+albedo_color = Color(0.196078, 0.196078, 0.196078, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_318lb"]
 material = SubResource("StandardMaterial3D_p1srx")
@@ -12,14 +11,12 @@ material = SubResource("StandardMaterial3D_p1srx")
 [sub_resource type="BoxMesh" id="BoxMesh_bsp4j"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bt5e3"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(0, 0, 0, 1)
+albedo_color = Color(0.141176, 0.141176, 0.141176, 1)
 
 [sub_resource type="SphereMesh" id="SphereMesh_1vc31"]
 material = SubResource("StandardMaterial3D_bt5e3")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vh11o"]
-vertex_color_use_as_albedo = true
 albedo_color = Color(1, 0, 0, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_m7b67"]
@@ -28,7 +25,6 @@ material = SubResource("StandardMaterial3D_vh11o")
 [sub_resource type="BoxShape3D" id="BoxShape3D_bmpm0"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0yrgv"]
-vertex_color_use_as_albedo = true
 albedo_color = Color(0.0784314, 1, 0, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_001ig"]

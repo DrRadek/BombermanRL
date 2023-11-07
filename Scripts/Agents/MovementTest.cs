@@ -9,10 +9,11 @@ public partial class MovementTest : Character
 
     public override void _PhysicsProcess(double delta)
     {
-        
-        timeSinceLastPickup += delta;
         base._PhysicsProcess(delta);
-        
+        AddReward(-0.0001f);
+
+        timeSinceLastPickup += delta;
+
         if (timeSinceLastPickup >= 5)
         {
             //AddReward(-1);
@@ -33,7 +34,8 @@ public partial class MovementTest : Character
     protected override void OnTriedToRunIntoObject()
     {
         //GD.Print("TRUE");
-        //AddReward(-1f);
+        //SetReward(-10);
+        //gameManager.ForceEndGame();
     }
 
     public override void Spawn(Vector3 pos)

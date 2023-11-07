@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://cumfvmd40soki"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e33gn"]
+transparency = 1
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_jq4eg"]
+material = SubResource("StandardMaterial3D_e33gn")
+size = Vector2(1, 1)
+
+[node name="ObsTile" type="MeshInstance3D"]
+mesh = SubResource("PlaneMesh_jq4eg")
