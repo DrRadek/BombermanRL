@@ -11,3 +11,4 @@
 script = ExtResource("2_krds0")
 action_repeat = 1
 onnx_model_path = "res://Learning/model.onnx"
+should_connect_to_server = true

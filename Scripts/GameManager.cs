@@ -34,7 +34,7 @@ public partial class GameManager : Node3D
     Vector3I[] lastPlayerPositions;
 
     //public Godot.Collections.Array<float> playerMapObservations = new();
-    const int playerMapObservationsSize = 7;
+    const int playerMapObservationsSize = 7;//21
     const int playerMapObservationsOffset = playerMapObservationsSize/2;
 
     //[Export]
@@ -51,6 +51,9 @@ public partial class GameManager : Node3D
 
     Dictionary<Vector3I, Fire> fires = new();
     //List<Fire> fires = new();
+
+    float[] bombValues = new float[arenaSize * arenaSize]; // = new(arenaSize * arenaSize);
+
 
     const int arenaSize = 17;
     const float bombDetonationSpeed = 2.5f * 0.5f;
@@ -163,7 +166,7 @@ public partial class GameManager : Node3D
                 for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
                 {
                     MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
-                    instance.Position = new Vector3(x, 2, y);
+                    instance.Position = new Vector3(x, 1.01f, y);
                     //instance.Transparency = 0.5f;
 
                     instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
@@ -257,10 +260,9 @@ public partial class GameManager : Node3D
                 {
                     SetTilesOnFire(bomb.Key); // bomb.Value.strength
                 }
-
-               
-                
             }
+
+            SimulateDetonationTimes();
         }
         catch (Exception e)
         {
@@ -313,7 +315,9 @@ public partial class GameManager : Node3D
         //    GetObservationsAroundPlayer(0, true);
         //    printDelta = 0;
         //}
-        GetObservationsAroundPlayer(0, false);
+
+        
+        //GetObservationsAroundPlayer(0, false);
     }
 
     void StartGame()
@@ -321,6 +325,7 @@ public partial class GameManager : Node3D
         // clean
         bombs.Clear();
         fires.Clear();
+        Array.Clear(bombValues, 0, bombValues.Length);
 
         // clean
         Vector3I pos = new Vector3I();
@@ -537,6 +542,100 @@ public partial class GameManager : Node3D
         return (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
     }
 
+    HashSet<Vector3I> usedBombs = new();
+    HashSet<Vector3I> currentBombs = new();
+
+    void SimulateDetonationTimes()
+    {
+        Array.Clear(bombValues, 0, bombValues.Length);
+        usedBombs.Clear();
+
+        foreach (var bomb in bombs)
+        {
+            if (usedBombs.Contains(bomb.Key))
+                continue;
+
+            var detonationTime = GetLowestDetonationTime(bomb.Key, bomb.Value, (float)bomb.Value.timeToDetonate);
+            // GD.Print($"value after: {detonationTime}, bomb: {bomb.Key}");
+            FillDetonationTimes(detonationTime);
+            currentBombs.Clear();
+        }
+    }
+
+
+    float GetLowestDetonationTime(Vector3I pos, Bomb bomb, float currentLowestValue)
+    {
+        float lowestValue = Mathf.Min(currentLowestValue, (float)bomb.timeToDetonate);
+        // GD.Print($"values before: {lowestValue}, bomb: {pos}");
+        currentBombs.Add(pos);
+        usedBombs.Add(pos);
+
+        int playerIndex = bomb.playerIndex;
+        Character player = players[playerIndex];
+        int bombStrength = player.BombStrength;
+
+        foreach (Vector3I direction in directions)
+        {
+            for (int i = 1; i <= bombStrength; i++)
+            {
+                Vector3I newPos = pos + direction * i;
+                int item = GetObjectInCell(newPos);
+                if (item == GridIndexes.bomb)
+                {
+                    if (!currentBombs.Contains(newPos))
+                        lowestValue = GetLowestDetonationTime(newPos, bombs[newPos], lowestValue);
+
+                    break;
+                }
+                else if (item == GridIndexes.destructibleWall || item == GridIndexes.indestructibleWall)
+                {
+                    break;
+                }
+            }
+        }
+
+
+        return lowestValue;
+    }
+
+    void FillDetonationTimes(float detonationTime)
+    {
+        foreach(Vector3I pos in currentBombs)
+        {
+            var bomb = bombs[pos];
+
+            int playerIndex = bomb.playerIndex;
+            Character player = players[playerIndex];
+            int bombStrength = player.BombStrength;
+
+            bombValues[GetGridIndex(pos)] = detonationTime;
+
+            foreach (Vector3I direction in directions)
+            {
+                for (int i = 1; i <= bombStrength; i++)
+                {
+                    Vector3I newPos = pos + direction * i;
+                    int item = GetObjectInCell(newPos);
+
+                    if (item == GridIndexes.bomb)
+                    {
+                        break;
+                    }
+                    else if (item == GridIndexes.destructibleWall || item == GridIndexes.indestructibleWall)
+                    {
+                        break;
+                    }
+                    else if(item == GridIndexes.fire)
+                    {
+                        continue;
+                    }
+
+                    bombValues[GetGridIndex(newPos)] = detonationTime;
+                }
+            }
+        }
+    }
+
     void SetTilesOnFire(Vector3I pos)
     {
         if (!bombs.TryGetValue(pos, out Bomb bomb))
@@ -629,13 +728,14 @@ public partial class GameManager : Node3D
                     if (IsInnerCell(gridPos))
                     {
                         int obj = GetObjectInCell(gridPos);
-                        if (obj == GridIndexes.bomb)
+                        float bombValue = bombValues[index];
+                        if (/*obj == GridIndexes.bomb*/ bombValue != 0)
                         {
-                            var bomb = bombs[gridPos];
+                            //var bomb = bombs[gridPos];
                             // { GridIndexes.bomb, -0.5f},
                             // { GridIndexes.fire, -1f},
                             playerMapObservations[obsIndex] = gridObsValues[GridIndexes.fire] 
-                                + (gridObsValues[GridIndexes.bomb] - gridObsValues[GridIndexes.fire]) * ((float)bomb.timeToDetonate / bombDetonationSpeed);
+                                + (gridObsValues[GridIndexes.bomb] - gridObsValues[GridIndexes.fire]) * (bombValue / bombDetonationSpeed);
                         }
                         else
                         {
@@ -674,7 +774,7 @@ public partial class GameManager : Node3D
             var strength = playerMapObservations[playerMapObservations.Count / 2];
             if (strength <= gridObsValues[GridIndexes.bomb])
             {
-                GD.Print(-strength);
+                //GD.Print(-strength);
                 player.OnDangerousTileTouched(-strength);
             }
 

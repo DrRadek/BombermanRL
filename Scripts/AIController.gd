@@ -166,7 +166,7 @@ func set_action(action) -> void:
 	
 	move_x = clamp(action["move"][0], -1.0, 1.0)
 	move_y = clamp(action["move"][1], -1.0, 1.0)
-	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0.5
+	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0.8
 	
 	#move_action = clamp(action["move_action"][0], -1.0, 1.0)
 	#return
