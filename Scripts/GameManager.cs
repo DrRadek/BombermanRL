@@ -121,9 +121,20 @@ public partial class GameManager : Node3D
         UpdateMapCell(cell, GridIndexes.collectible1);
     }
 
-    Vector3I GetRandomInnerCell()
+    protected Vector3I GetRandomInnerCell()
     {
         return new Vector3I(-arenaOffset+1 + random.Next(0,arenaSize-2),0, -arenaOffset+1 + random.Next(0, arenaSize-2));
+    }
+
+    protected Vector3I GetRandomEmptyInnerCell()
+    {
+        Vector3I pos;
+        do
+        {
+            pos = GetRandomInnerCell();
+        } while (GetObjectInCell(pos) != -1);
+
+        return pos;
     }
 
     bool IsInnerCell(Vector3I pos)
@@ -316,11 +327,16 @@ public partial class GameManager : Node3D
         //    printDelta = 0;
         //}
 
-        
-        //GetObservationsAroundPlayer(0, false);
+        if (players[0].IsHuman)
+            GetObservationsAroundPlayer(0, false);
     }
 
-    void StartGame()
+    protected virtual void StartGame()
+    {
+        StartGame(() => DefaultGameMode());
+    }
+
+    protected void StartGame(Action gameMode)
     {
         // clean
         bombs.Clear();
@@ -339,45 +355,7 @@ public partial class GameManager : Node3D
             }
         }
 
-        // add random destructible walls
-        for (int i = 0; i < 100; i++)
-        {
-            UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
-        }
-
-        // add indestructible walls
-        var currentPos = new Vector3I(-arenaOffset + 2, 0, -arenaOffset + 2);
-        for (int z = 0; z < arenaOffset - 1; z++)
-        {
-            for (int x = 0; x < arenaOffset - 1; x++)
-            {
-                UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-                currentPos.X += 2;
-            }
-            currentPos.X = -arenaOffset + 2;
-            currentPos.Z += 2;
-        }
-
-        // make empty space around corners
-        foreach (Vector3I spawnPos in spawnPositions)
-        {
-            for (int x = -1; x <= 1; x++)
-            {
-                Vector3I newPos = spawnPos + new Vector3I(x, 0, 0);
-                if (IsInnerCell(newPos))
-                    UpdateMapCell(newPos, -1);
-            }
-
-            for (int z = -1; z <= 1; z += 2)
-            {
-                Vector3I newPos = spawnPos + new Vector3I(0, 0, z);
-                if (IsInnerCell(newPos))
-                    UpdateMapCell(newPos, -1);
-            }
-        }
-
-
-
+        gameMode();
         //{
 
         //for (int i = 0; i < 10; i++)
@@ -422,6 +400,55 @@ public partial class GameManager : Node3D
         usedSpawnPositions.Clear();
     }
 
+    protected void DefaultGameMode()
+    {
+        AddIndestructibleWalls();
+        AdddestructibleWalls();
+    }
+
+    protected void AddIndestructibleWalls()
+    {
+        // add indestructible walls
+        var currentPos = new Vector3I(-arenaOffset + 2, 0, -arenaOffset + 2);
+        for (int z = 0; z < arenaOffset - 1; z++)
+        {
+            for (int x = 0; x < arenaOffset - 1; x++)
+            {
+                UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
+                currentPos.X += 2;
+            }
+            currentPos.X = -arenaOffset + 2;
+            currentPos.Z += 2;
+        }
+    }
+
+    protected void AdddestructibleWalls()
+    {
+        // add random destructible walls
+        for (int i = 0; i < 100; i++)
+        {
+            UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
+        }
+
+        // make empty space around corners
+        foreach (Vector3I spawnPos in spawnPositions)
+        {
+            for (int x = -1; x <= 1; x++)
+            {
+                Vector3I newPos = spawnPos + new Vector3I(x, 0, 0);
+                if (IsInnerCell(newPos))
+                    UpdateMapCell(newPos, -1);
+            }
+
+            for (int z = -1; z <= 1; z += 2)
+            {
+                Vector3I newPos = spawnPos + new Vector3I(0, 0, z);
+                if (IsInnerCell(newPos))
+                    UpdateMapCell(newPos, -1);
+            }
+        }
+    }
+
     public void OnPlayerHit(int teamID, Vector3 playerPosition)
     {
         if (!fires.TryGetValue(GetGridPosition(playerPosition), out var fire)){
@@ -447,12 +474,12 @@ public partial class GameManager : Node3D
                 var currentPlayer = players[i];
                 if (currentPlayer.TeamID == fireTeamID)
                 {
-                    // GD.Print($"player from team {currentPlayer.TeamID} hit someone from team {teamID}");
+                    //GD.Print($"player from team {currentPlayer.TeamID} hit someone from team {teamID}");
                     currentPlayer.OnEnemyTeamHit();
                 }
                 else if(currentPlayer.TeamID == teamID)
                 {
-                    // GD.Print($"player from team {currentPlayer.TeamID} received a hit from team {fireTeamID}");
+                    //GD.Print($"player from team {currentPlayer.TeamID} received a hit from team {fireTeamID}");
                     currentPlayer.OnTeamHit();
                 }
             }
@@ -471,9 +498,9 @@ public partial class GameManager : Node3D
                 if(player.Lives > 0)
                 {
                     player.OnTeamWin();
+                    player.Despawn();
                 }
             }
-
             StartGame();
         }
     }
@@ -515,7 +542,7 @@ public partial class GameManager : Node3D
         }
         catch(Exception e)
         {
-            GD.PrintErr($"Failed to update map cell in position {pos} (what = {what}, index = {index})");
+            GD.PrintErr($"Failed to update map cell in position {pos} (what = {what}, index = {index}), error:\n{e}");
             ForceEndGame();
         }
     }
@@ -655,7 +682,7 @@ public partial class GameManager : Node3D
         Character player = players[playerIndex];
         int teamID = player.TeamID;
         int bombStrength = player.BombStrength;
-        player.SpawnedBombs--;
+        player.SpawnedBombs = Math.Max(0, player.SpawnedBombs - 1);
 
         bomb.isRemoved = true;
         HandleFireInsertion(pos, teamID);
@@ -776,6 +803,10 @@ public partial class GameManager : Node3D
             {
                 //GD.Print(-strength);
                 player.OnDangerousTileTouched(-strength);
+            }
+            else
+            {
+                player.OnNormalTileTouched();
             }
 
 

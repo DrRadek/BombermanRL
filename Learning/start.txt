@@ -34,3 +34,5 @@ path at line 277 to abspath: launch_cmd[0] = os.path.abspath(launch_cmd[0])
 alternativa: path = "./" + convert_macos_path(env_path) if platform == "darwin" else env_path
 
 gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_workers=4 --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=10000000 --num_policies=4 --viz --use_rnn=True --recurrence=32 --with_pbt=True --pbt_period_env_steps=1000000 --pbt_start_mutation=1000000 --learning_rate=0.00005 --exploration_loss_coef=0.001 --lr_schedule=kl_adaptive_epoch
+
+gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_envs_per_worker=4 --speedup=4 --device=gpu --batched_sampling=False --train_for_env_steps=10000000 --num_policies=4 --viz --experiment=BombDodge

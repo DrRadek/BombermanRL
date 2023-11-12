@@ -34,4 +34,4 @@ mesh = SubResource("CapsuleMesh_kfljh")
 
 [node name="AIController3D" type="Node3D" parent="." groups=["AGENT"]]
 script = ExtResource("2_il14h")
-reset_after = 1000000000
+reset_after = 50000

@@ -1,14 +1,17 @@
-[gd_scene load_steps=3 format=3 uid="uid://co4s6fgqqc0eu"]
+[gd_scene load_steps=5 format=3 uid="uid://co4s6fgqqc0eu"]
 
-[ext_resource type="PackedScene" uid="uid://bjgbjnxs817l3" path="res://Scenes/game2.tscn" id="2_eo7nv"]
+[ext_resource type="Script" path="res://Scripts/ModeManager.cs" id="1_ex73d"]
+[ext_resource type="PackedScene" uid="uid://bjgbjnxs817l3" path="res://Scenes/Arenas/BaseGame.tscn" id="2_eo7nv"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="2_krds0"]
+[ext_resource type="PackedScene" uid="uid://bg82kwk31ervq" path="res://Scenes/Arenas/BombDodge.tscn" id="3_pgbmp"]
 
 [node name="Train" type="Node3D"]
-
-[node name="Game2" parent="." instance=ExtResource("2_eo7nv")]
+script = ExtResource("1_ex73d")
+modeIndex = 1
+modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp")]
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("2_krds0")
-action_repeat = 1
+action_repeat = 4
 onnx_model_path = "res://Learning/model.onnx"
 should_connect_to_server = true

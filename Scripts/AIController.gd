@@ -18,8 +18,6 @@ func get_obs() -> Dictionary:
 	var player = []
 	var players = []
 	
-
-	
 	
 	for i in range(game_manager.maxPlayerCount):
 		if i == id:
@@ -92,7 +90,9 @@ func get_obs() -> Dictionary:
 	obs.append_array(player)
 	#obs.append_array(players)
 	
-	
+	if _player.Lives == 0:
+		obs.fill(0)
+		
 	#print(obs)
 	#print(len(obs))
 	#print(obs)
@@ -128,6 +128,9 @@ func get_obs() -> Dictionary:
 	}"""
 
 func get_reward() -> float:
+	if _player.Lives == 0:
+		return 0
+	
 	return reward
 	
 func get_action_space() -> Dictionary:
@@ -166,7 +169,7 @@ func set_action(action) -> void:
 	
 	move_x = clamp(action["move"][0], -1.0, 1.0)
 	move_y = clamp(action["move"][1], -1.0, 1.0)
-	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0.8
+	place_bomb = clamp(action["place_bomb"][0],0, 1) > 0
 	
 	#move_action = clamp(action["move_action"][0], -1.0, 1.0)
 	#return

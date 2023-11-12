@@ -63,6 +63,7 @@ public partial class Character : CharacterBody3D
     public int DefaultMaxSpawnedBombs { get => defaultMaxSpawnedBombs; protected set => defaultMaxSpawnedBombs = value; }
     public int DefaultBombStrength { get => defaultBombStrength; protected set => defaultBombStrength = value; }
     public Vector3 PosChange { get => posChange; private set => posChange = value; }
+    public bool IsHuman { get => isHuman; private set => isHuman = value; }
 
     public Vector3 GetLocalPlayerPos()
     {
@@ -73,6 +74,8 @@ public partial class Character : CharacterBody3D
     {
         return 0.5f + teamID * 0.125f + myID * 0.01f;
     }
+
+    bool isHuman = false;
 
     bool isAiInit = false;
 
@@ -102,7 +105,8 @@ public partial class Character : CharacterBody3D
         if (Lives == 0)
             return;
 
-
+        //if (teamID == 1)
+        //    GD.Print(aiController.Get(aiPropertyName.reward));
 
         Vector2 inputDir = Vector2.Zero;
         bool bombInput = false;
@@ -114,14 +118,15 @@ public partial class Character : CharacterBody3D
                 return;
             }
 
-            if ((String)aiController.Get(aiPropertyName.heuristic) != "human")
+            if (!isHuman)
             {
                 bombInput = (int)aiController.Get(aiPropertyName.placeBomb) == 1;
-                inputDir = new Vector2((float)aiController.Get(aiPropertyName.moveX), (float)aiController.Get(aiPropertyName.moveY)).Normalized();
+                inputDir = new Vector2((float)aiController.Get(aiPropertyName.moveX), (float)aiController.Get(aiPropertyName.moveY));
+                //inputDir = inputDir.Normalized();
             }
         }
 
-        if (isPlayer || (aiController != null && (String)aiController.Get(aiPropertyName.heuristic) == "human"))
+        if (isPlayer || isHuman)
         {
             bombInput = Input.IsActionJustPressed("PlaceBomb");
             inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
@@ -149,7 +154,7 @@ public partial class Character : CharacterBody3D
 
 
         Vector3 velocity = Velocity;
-        Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized(); ;
+        Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized() * (Mathf.Min(inputDir.Length(), 1));
         
 
 
@@ -292,17 +297,31 @@ public partial class Character : CharacterBody3D
         // AddReward(0.01f);
     }
 
+    public virtual void OnNormalTileTouched()
+    {
+        // AddReward(0.01f);
+    }
 
     public virtual void Spawn(Vector3 pos)
     {
+        
         //if (!isAiInit)
         //{
         //    GD.Print("true");
         //    aiController.Call(aiMethodName.init, this);
         //    isAiInit = true;
         //}
-        if(aiController != null)
+        if (aiController != null)
+        {
+            isHuman = (String)aiController.Get(aiPropertyName.heuristic) == "human";
+            // GD.Print(isHuman);
             aiController.Call(aiMethodName.reset);
+        }
+        else
+        {
+            isHuman = true;
+        }
+            
 
         //SetProcess(true);
 
