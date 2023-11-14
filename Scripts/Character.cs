@@ -1,10 +1,9 @@
 using Godot;
 using System;
-using System.Drawing;
 
 public partial class Character : CharacterBody3D
 {
-    [Export] 
+    [Export]
     Node3D aiController;
 
     [Export]
@@ -22,141 +21,173 @@ public partial class Character : CharacterBody3D
     [Export]
     bool isPlayer = false;
 
+    public int playerIndex;
+
     protected GameManager gameManager;
     StandardMaterial3D material;
 
-    public int playerIndex;
-
-    //float bombCoolDown = 0f;
-    //float defaultBombCoolDown = 0f;
-
-	const float speed = 4.0f * 2f;
-    const float flickerSpeed = 0.2f * 0.5f;
-    const int maxLives = 3;
-    int defaultMaxSpawnedBombs = 3;
-    int defaultBombStrength = 3;
-    double flickerDelta = 0;
-    bool flickerFrame = false;
-
-    int lives = 0;
-    //bool isAlive = true;
-    bool isInvulnerable = false;
-    double invulnerabilityTime = 0f;
-    float invulnerabilityTimeDefault = 2f;
-
     Vector3 posChange = Vector3.Zero;
 
-    
-    int maxSpawnedBombs = 0; // TODO: Add to AI parameters
-    int spawnedBombs = 0; // TODO: Add to AI parameters
-    int bombStrength = 0; // TODO: Add to AI parameters
+    // character speed
+    const float speed = 4.0f * 2f;
+
+    bool isHuman = false;
+    bool waitAfterSpawn = true;
+
+    int defaultMaxSpawnedBombs = 3;
+    int defaultBombStrength = 3;
+
+    const int maxLives = 3;
+    int lives = 0;
+
+    // invulnerability info
+    const float flickerSpeed = 0.2f * 0.5f;
+    bool flickerFrame = false;
+    bool isInvulnerable = false;
+    double flickerDelta = 0;
+    double invulnerabilityTime = 0f;
+    double invulnerabilityTimeDefault = 2f;
+
+    // bomb info
+    const double bombCooldownAfterSpawn = 0.75f;
+    const double bombCooldownAfterUse = 0.5f;
+    int maxSpawnedBombs = 0;
+    int spawnedBombs = 0;
+    int bombStrength = 0;
+    double maxBombCooldown = Mathf.Max(bombCooldownAfterUse, bombCooldownAfterSpawn);
+    double bombDelta = bombCooldownAfterSpawn;
 
     public int Lives { get => lives; private set => lives = value; }
-    //public bool IsAlive { get => isAlive; private set => isAlive = value; }
-    private bool IsInvulnerable { get => isInvulnerable; set => isInvulnerable = value; }
     public double InvulnerabilityTime { get => invulnerabilityTime; set => invulnerabilityTime = value; }
-    private int MaxSpawnedBombs { get => maxSpawnedBombs; set => maxSpawnedBombs = value; }
     public int SpawnedBombs { get => spawnedBombs; set => spawnedBombs = value; }
-    public int BombStrength { get => bombStrength; private set => bombStrength = value; }
-    public int TeamID { get => teamID; private set => teamID = value; }
-    //public int MyID { get => myID; set => myID = value; }
+    public int BombStrength { get => bombStrength; }
+    public int TeamID { get => teamID; }
     public int DefaultMaxSpawnedBombs { get => defaultMaxSpawnedBombs; protected set => defaultMaxSpawnedBombs = value; }
     public int DefaultBombStrength { get => defaultBombStrength; protected set => defaultBombStrength = value; }
-    public Vector3 PosChange { get => posChange; private set => posChange = value; }
+    public Vector3 PosChange { get => posChange; }
     public bool IsHuman { get => isHuman; private set => isHuman = value; }
+    public bool IsDead { get => lives == 0; }
+    private bool IsInvulnerable { get => isInvulnerable; set => isInvulnerable = value; }
+    private int MaxSpawnedBombs { get => maxSpawnedBombs; set => maxSpawnedBombs = value; }
 
-    public Vector3 GetLocalPlayerPos()
+    Vector3 GetLocalPlayerPos()
     {
         return Position - GameManager.GetGridPosition(Position);
     }
-
-    public float GetID()
+    float GetNormalizedLives()
     {
-        return 0.5f + teamID * 0.125f + myID * 0.01f;
+        return lives / (float)maxLives;
     }
+    public Godot.Collections.Array<float> GetObs()
+    {
+        Godot.Collections.Array<float> obs = new();
+        obs.Resize(7);
+        if (!IsDead)
+        {
+            Vector3 pos = GetLocalPlayerPos();
+            obs[0] = pos.X;
+            obs[1] = pos.Z;
+            obs[2] = posChange.X;
+            obs[3] = posChange.Z;
+            obs[4] = GetNormalizedLives();
+            obs[5] = (float)(invulnerabilityTime / invulnerabilityTimeDefault);
+            obs[6] = (spawnedBombs == maxSpawnedBombs) ? (float)maxBombCooldown : (float)(bombDelta / maxBombCooldown);
+        }
+        else
+        {
+            for (int i = 0; i < obs.Count; i++)
+            {
+                obs[i] = 0;
+            }
+        }
+        return obs;
+    }
+    public Godot.Collections.Array<float> GetEnemyObs(Character character)
+    {
+        Godot.Collections.Array<float> obs = new();
+        obs.Resize(8);
+        if (!IsDead)
+        {
+            Vector3 pos = GetLocalPlayerPos();
+            Vector3 direction = character.Position - Position;
+            direction.Y = 0;
+            direction = direction.Normalized();
 
-    bool isHuman = false;
-
-    bool isAiInit = false;
+            obs[0] = pos.X;
+            obs[1] = pos.Z;
+            obs[2] = posChange.X;
+            obs[3] = posChange.Z;
+            obs[4] = GetNormalizedLives();
+            obs[5] = (float)(invulnerabilityTime / invulnerabilityTimeDefault);
+            obs[6] = direction.X;
+            obs[7] = direction.Z;
+        }
+        else
+        {
+            for (int i = 0; i < obs.Count; i++)
+            {
+                obs[i] = 0;
+            }
+        }
+        return obs;
+    }
 
     public override void _Ready()
     {
         OnDefaultValuesSet();
-        gameManager = GetParent<GameManager>(); //(GameManager)GetTree().CurrentScene;
+        gameManager = GetParent<GameManager>();
         aiController?.Call(aiMethodName.init, this);
-        //Despawn();
 
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
-        //collider.Disabled = true;
-        //Visible = false;
-        //lives = 0;
-        
 
     }
-
-
-
-
-
     public override void _PhysicsProcess(double delta)
-	{
-        //AddReward(-0.0001f); // time reward
-
-        if (Lives == 0)
+    {
+        if (IsDead)
             return;
-
-        //if (teamID == 1)
-        //    GD.Print(aiController.Get(aiPropertyName.reward));
 
         Vector2 inputDir = Vector2.Zero;
         bool bombInput = false;
-        if(aiController != null)
+        if (aiController != null)
         {
             if ((bool)aiController.Get(aiPropertyName.needsReset))
-            {
-                //gameManager.ForceEndGame();
                 return;
-            }
 
             if (!isHuman)
             {
                 bombInput = (int)aiController.Get(aiPropertyName.placeBomb) == 1;
                 inputDir = new Vector2((float)aiController.Get(aiPropertyName.moveX), (float)aiController.Get(aiPropertyName.moveY));
-                //inputDir = inputDir.Normalized();
             }
-        }
-
-        if (isPlayer || isHuman)
-        {
-            bombInput = Input.IsActionJustPressed("PlaceBomb");
-            inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
+            else if (isPlayer || (isHuman))
+            {
+                bombInput = Input.IsActionJustPressed("PlaceBomb");
+                inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
+            }
         }
 
         if (bombInput)
         {
-            if (isInvulnerable || spawnedBombs >= maxSpawnedBombs)
+            if (isInvulnerable || spawnedBombs >= maxSpawnedBombs || bombDelta > 0)
             {
                 OnBombFailedToPlace();
             }
             else
             {
-                if (!gameManager.PlaceBomb(Position, playerIndex))
+                if (!gameManager.PlaceBomb(Position, playerIndex, out float rating))
                 {
                     OnBombFailedToPlace();
                 }
                 else
                 {
-                    OnBombPlaced();
+                    OnBombPlaced(rating);
+                    bombDelta = bombCooldownAfterUse;
                     spawnedBombs++;
                 }
             }
         }
 
-
         Vector3 velocity = Velocity;
         Vector3 direction = (Transform.Basis * new Vector3(inputDir.X, 0, inputDir.Y)).Normalized() * (Mathf.Min(inputDir.Length(), 1));
-        
-
 
         if (direction != Vector3.Zero)
         {
@@ -170,8 +201,12 @@ public partial class Character : CharacterBody3D
         }
         Velocity = velocity;
         var pos = Position;
-        MoveAndSlide();
-        PosChange = Position - pos;
+
+        if (!waitAfterSpawn)
+            MoveAndSlide();
+        waitAfterSpawn = false;
+
+        posChange = Position - pos;
 
         if (Velocity.LengthSquared() <= Mathf.Epsilon * 10 && inputDir != Vector2.Zero)
         {
@@ -182,7 +217,7 @@ public partial class Character : CharacterBody3D
         {
             flickerDelta += delta;
             var color = material.AlbedoColor;
-            if(flickerDelta >= flickerSpeed)
+            if (flickerDelta >= flickerSpeed)
             {
                 flickerFrame = !flickerFrame;
                 if (flickerFrame)
@@ -197,7 +232,7 @@ public partial class Character : CharacterBody3D
             }
 
             invulnerabilityTime -= delta;
-            if(invulnerabilityTime <= 0)
+            if (invulnerabilityTime <= 0)
             {
                 invulnerabilityTime = 0;
                 isInvulnerable = false;
@@ -215,21 +250,82 @@ public partial class Character : CharacterBody3D
                 break;
             case GameManager.GridIndexes.collectible1:
                 OnCollectibleCollected(0);
-                
-                break;
 
+                break;
 
             default: break;
         }
+
+        bombDelta = Mathf.Max(bombDelta - delta, 0);
     }
+    public virtual void Spawn(Vector3 pos)
+    {
+        if (aiController != null)
+        {
+            isHuman = (String)aiController.Get(aiPropertyName.heuristic) == "human";
+            aiController.Call(aiMethodName.reset);
+        }
+        else
+        {
+            isHuman = true;
+        }
 
+        lives = maxLives;
 
+        Position = new Vector3(pos.X, Position.Y, pos.Z);
+        Velocity = Vector3.Zero;
+        collider.Disabled = false;
+        Visible = true;
+
+        maxSpawnedBombs = defaultMaxSpawnedBombs;
+        bombStrength = defaultBombStrength;
+        spawnedBombs = 0;
+        invulnerabilityTime = 0;
+
+        isInvulnerable = false;
+        flickerFrame = false;
+        flickerDelta = 0;
+        bombDelta = bombCooldownAfterSpawn;
+
+        waitAfterSpawn = true;
+    }
+    public void Despawn()
+    {
+        if (aiController != null)
+        {
+            aiController.Set(aiPropertyName.done, true);
+            aiController.Set(aiPropertyName.needsReset, true);
+        }
+
+        collider.Disabled = true;
+        Visible = false;
+        lives = 0;
+        Velocity = Vector3.Zero;
+    }
+    public bool NeedsReset()
+    {
+        if (aiController != null)
+        {
+            return (bool)aiController.Get(aiPropertyName.needsReset);
+        }
+        else
+        {
+            return true;
+        }
+    }
+    public void AddReward(float reward)
+    {
+        if (aiController != null)
+        {
+            aiController.Set(aiPropertyName.reward, (float)aiController.Get(aiPropertyName.reward) + reward);
+        }
+
+    }
     void HandleFireHit()
     {
         if (!isInvulnerable)
         {
             lives -= 1;
-            //GD.Print("Hit");
 
             isInvulnerable = true;
             flickerFrame = true;
@@ -237,26 +333,44 @@ public partial class Character : CharacterBody3D
 
             invulnerabilityTime = invulnerabilityTimeDefault;
 
-            if (lives == 0)
+            if (IsDead)
             {
-                //GD.Print("Death");
                 Despawn();
-                gameManager.OnPlayerDeath(myID);
-                //GD.Print("Game Over for you");
-
-                //return;
+                gameManager.OnPlayerDeath(playerIndex);
             }
 
             gameManager.OnPlayerHit(teamID, Position);
-            //OnTeamHit();
-
         }
-        
+
     }
 
-    protected virtual void OnBombPlaced()
+    public virtual void OnTeamHit()
+    {
+        // AddReward(-0.01f);
+    }
+    public virtual void OnEnemyTeamHit()
     {
         // AddReward(0.01f);
+    }
+    public virtual void OnTeamWin()
+    {
+        // AddReward(0.01f);
+    }
+    public virtual void OnWallDestroyed()
+    {
+        // AddReward(0.01f);
+    }
+    public virtual void OnDangerousTileTouched(float strength)
+    {
+        // AddReward(0.01f);
+    }
+    public virtual void OnNormalTileTouched()
+    {
+        // AddReward(0.01f);
+    }
+    protected virtual void OnBombPlaced(float rating)
+    {
+
     }
     protected virtual void OnTriedToRunIntoObject()
     {
@@ -273,117 +387,6 @@ public partial class Character : CharacterBody3D
     protected virtual void OnDefaultValuesSet()
     {
 
-    }
-    public virtual void OnTeamHit()
-    {
-        // AddReward(-0.01f);
-    }
-    public virtual void OnEnemyTeamHit()
-    {
-        // AddReward(0.01f);
-    }
-    public virtual void OnTeamWin()
-    {
-        // AddReward(0.01f);
-    }
-
-    public virtual void OnWallDestroyed()
-    {
-        // AddReward(0.01f);
-    }
-
-    public virtual void OnDangerousTileTouched(float strength)
-    {
-        // AddReward(0.01f);
-    }
-
-    public virtual void OnNormalTileTouched()
-    {
-        // AddReward(0.01f);
-    }
-
-    public virtual void Spawn(Vector3 pos)
-    {
-        
-        //if (!isAiInit)
-        //{
-        //    GD.Print("true");
-        //    aiController.Call(aiMethodName.init, this);
-        //    isAiInit = true;
-        //}
-        if (aiController != null)
-        {
-            isHuman = (String)aiController.Get(aiPropertyName.heuristic) == "human";
-            // GD.Print(isHuman);
-            aiController.Call(aiMethodName.reset);
-        }
-        else
-        {
-            isHuman = true;
-        }
-            
-
-        //SetProcess(true);
-
-        //color.A = 1f;
-
-        lives = maxLives;
-        Velocity = Vector3.Zero;
-        Position = pos;
-        collider.Disabled = false;
-        Visible = true;
-        maxSpawnedBombs = defaultMaxSpawnedBombs;
-        bombStrength = defaultBombStrength;
-        spawnedBombs = 0;
-
-        isInvulnerable = false;
-        flickerFrame = false;
-        flickerDelta = 0;
-    }
-
-    public void Despawn()
-    {
-        if(aiController != null)
-        {
-            aiController.Set(aiPropertyName.done, true);
-            aiController.Set(aiPropertyName.needsReset, true);
-        }
-        
-        //SetProcess(false);
-        collider.Disabled = true;
-        Visible = false;
-        lives = 0;
-        Velocity = Vector3.Zero;
-    }
-
-    public void AddReward(float reward)
-    {
-        if(aiController != null)
-        {
-            
-            aiController.Set(aiPropertyName.reward, (float)aiController.Get(aiPropertyName.reward) + reward);
-            //GD.Print("new reward:");
-            //GD.Print(aiController.Get(aiPropertyName.reward));
-            //GD.Print("Change:");
-            //GD.Print(reward);
-        }
-            
-    }
-
-    public void SetReward(float reward)
-    {
-        aiController.Set(aiPropertyName.reward, reward);
-    }
-    public bool NeedsReset()
-    {
-        if (aiController != null)
-        {
-            return (bool)aiController.Get(aiPropertyName.needsReset);
-        }
-        else
-        {
-            return true;
-        }
     }
 }
 

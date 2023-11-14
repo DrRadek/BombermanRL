@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://cyuwbw74eo612"]
 
-[ext_resource type="Script" path="res://Scripts/Character.cs" id="1_mwpwb"]
+[ext_resource type="Script" path="res://Scripts/Character.cs" id="1_c7o02"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ykg5p"]
 radius = 0.45
@@ -18,7 +18,7 @@ material = SubResource("StandardMaterial3D_2fm4c")
 
 [node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("mesh", "collider")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-script = ExtResource("1_mwpwb")
+script = ExtResource("1_c7o02")
 mesh = NodePath("MeshInstance3D")
 collider = NodePath("CollisionShape3D")
 teamID = 1

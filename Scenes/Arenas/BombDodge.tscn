@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/Arenas/BombDodge.cs" id="1_d3p1p"]
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="2_45wlk"]
-[ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/character.tscn" id="3_pe137"]
+[ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_pe137"]
 [ext_resource type="Script" path="res://Scripts/Agents/BombDodgeAgent.cs" id="4_k381w"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
@@ -26,7 +26,6 @@ size = Vector3(1, 1, 15)
 [node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
 script = ExtResource("1_d3p1p")
 gridmap = NodePath("Map/GridMap")
-playerCount = 4
 players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
 
 [node name="Map" type="Node3D" parent="."]

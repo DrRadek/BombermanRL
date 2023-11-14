@@ -1,63 +1,51 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using static Godot.Projection;
 
 public partial class GameManager : Node3D
 {
-    bool waitForServer = true;
-
-    bool visualizeObs = true;
-    Node3D obsNode;
-    List<StandardMaterial3D> obsNodeMaterials;
-
-    double printSpeed = 0.3f;
-    double printDelta = 0;
-
     [Export]
     GridMap gridmap;
 
     [Export]
-    int playerCount = 2;
-
-    [Export]
-    int playerID = 0;
+    int playerCount = 4;
 
     [Export]
     public Godot.Collections.Array<Character> players = new();
 
-    [Export]
     public int maxPlayerCount = 4;
 
+    bool waitForServer = true;
+
+    const int playerMapObservationsSize = 7;
+    const int playerMapObservationsOffset = playerMapObservationsSize / 2;
+    const int enemyMapObservationsSize = 3;
+    const int enemyMapObservationsOffset = enemyMapObservationsSize / 2;
+    const int arenaSize = 17;
+    const int arenaOffset = (arenaSize / 2);
+    const int cornerOffset = arenaOffset - 1;
+
+    const float bombDetonationSpeed = 2.5f * 0.5f;
+    const float fireDuration = 1.5f * 0.5f;
+    float[] bombValues = new float[arenaSize * arenaSize];
+
+    // debug info
+    bool visualizeObs = true;
+    List<Node3D> obsNodes = new();
+    List<List<StandardMaterial3D>> obsNodeMaterials = new();
+    double printSpeed = 0.3f;
+    double printDelta = 0;
+
+    int alivePlayerCount;
     Vector3I[] lastPlayerPositions;
-
-    //public Godot.Collections.Array<float> playerMapObservations = new();
-    const int playerMapObservationsSize = 7;//21
-    const int playerMapObservationsOffset = playerMapObservationsSize/2;
-
-    //[Export]
-    //PackedScene playableCharacter;
-
-    //[Export]
-    //PackedScene character;
 
     Random random = new Random();
 
-    int alivePlayerCount;
-    
     Dictionary<Vector3I, Bomb> bombs = new();
-
     Dictionary<Vector3I, Fire> fires = new();
-    //List<Fire> fires = new();
 
-    float[] bombValues = new float[arenaSize * arenaSize]; // = new(arenaSize * arenaSize);
-
-
-    const int arenaSize = 17;
-    const float bombDetonationSpeed = 2.5f * 0.5f;
-    const float fireDuration = 1.5f * 0.5f;
+    public Godot.Collections.Array<int> mapSensor = new();
+    public Godot.Collections.Array<int> playerMapSensor = new();
 
     Vector3I[] spawnPositions = new Vector3I[]{
         new Vector3I(-cornerOffset, 0, -cornerOffset),
@@ -66,9 +54,6 @@ public partial class GameManager : Node3D
         new Vector3I(cornerOffset, 0, cornerOffset),
     };
 
-    const int arenaOffset = (arenaSize / 2);
-    const int cornerOffset = arenaOffset - 1;
-
     Vector3I[] directions = {
         new Vector3I(1,0,0),
         new Vector3I(-1,0,0),
@@ -76,27 +61,33 @@ public partial class GameManager : Node3D
         new Vector3I(0, 0, -1)
     };
 
-    Dictionary<int, float> gridObsValues = new() {
-        {(int)GridMap.InvalidCellItem, 0 },
-        {GridIndexes.collectible1, 0.6f },
-        {GridIndexes.indestructibleWall, 0.25f },
-        {GridIndexes.destructibleWall, 0.5f },
-        {GridIndexes.bomb, -0.5f},
-        {GridIndexes.fire, -1f},
-        {GridIndexes.friendlyPlayer, 0.75f},
-        {GridIndexes.enemyPlayer, 1f},
+    //Dictionary<int, float> gridObsValues = new() {
+    //    {(int)GridMap.InvalidCellItem, 0 },
+    //    {GridIndexes.collectible1, 0.6f },
+    //    {GridIndexes.indestructibleWall, 0.25f },
+    //    {GridIndexes.destructibleWall, 0.5f },
+    //    {GridIndexes.bomb, -0.5f},
+    //    {GridIndexes.fire, -1f},
+    //    {GridIndexes.friendlyPlayer, 0.75f},
+    //    {GridIndexes.enemyPlayer, 1f},
 
+    //};
+
+    Dictionary<int, int> gridObsValues = new() {
+        {GridIndexes.empty, 0 },
+        {GridIndexes.indestructibleWall, 1 },
+        {GridIndexes.destructibleWall, 2 },
+        {GridIndexes.friendlyPlayer, 3},
+        {GridIndexes.enemyPlayer, 4},
+
+        {GridIndexes.bomb, 0},
+        {GridIndexes.fire, 0},
+        {GridIndexes.collectible1, 0},
     };
-
-    //bool needsReset = false;
-
-    //public Godot.Collections.Array<Godot.Collections.Array<Godot.Collections.Array<int>>> mapSensor = new();
-    public Godot.Collections.Array<float> mapSensor = new();
-    public Godot.Collections.Array<int> playerMapSensor = new();
-    //public int[,] mapSensor = new int[arenaSize, arenaSize];
 
     public class GridIndexes
     {
+        public const int empty = -1;
         public const int indestructibleWall = 0;
         public const int destructibleWall = 1;
         public const int bomb = 2;
@@ -106,87 +97,235 @@ public partial class GameManager : Node3D
         public const int enemyPlayer = 6;
     }
 
-    public void OnCollectibleCollected(Vector3 position)
+    bool IsInnerCell(Vector3I pos)
     {
-        Vector3I pos = GetGridPosition(position);
-        UpdateMapCell(pos, -1);
-
-        var playerPos = GetGridPosition(position);
-        var cell = GetRandomInnerCell();
-        
-        while(playerPos == cell)
-        {
-            cell = GetRandomInnerCell();
-        }
-        UpdateMapCell(cell, GridIndexes.collectible1);
+        return pos.X >= (-arenaOffset + 1) && pos.Z >= (-arenaOffset + 1) && pos.X < (-arenaOffset - 1 + arenaSize) && pos.Z < (-arenaOffset - 1 + arenaSize);
     }
+    public Godot.Collections.Dictionary<string, Variant> GetObservationsAroundPlayer(int sourcePlayerIndex, int targetPlayerIndex)
+    {
+        Godot.Collections.Array<int> playerMapObservations = new();
+        Godot.Collections.Array<float> playerBombObservations = new();
+        Godot.Collections.Dictionary<string, Variant> dict = new();
+        dict["obs_around_player"] = playerMapObservations;
+        dict["obs_around_player_bomb"] = playerBombObservations;
 
+        bool isEnemy = sourcePlayerIndex != targetPlayerIndex;
+        int obsSize = isEnemy ? enemyMapObservationsSize : playerMapObservationsSize;
+        int obsOffset = isEnemy ? enemyMapObservationsOffset : playerMapObservationsOffset;
+
+        playerMapObservations.Resize(obsSize * obsSize);
+        playerBombObservations.Resize(obsSize * obsSize);
+
+        var sourcePlayer = players[sourcePlayerIndex];
+        if (sourcePlayer.IsDead)
+        {
+            for (int i = 0; i < playerMapObservations.Count; i++)
+            {
+                playerMapObservations[i] = 0;
+                playerBombObservations[i] = 0;
+            }
+            return dict;
+        }
+
+        var sourcePlayerTeamID = sourcePlayer.TeamID;
+        var targetPlayer = players[targetPlayerIndex];
+
+        try
+        {
+            Vector3I pos = GetGridPosition(targetPlayer.Position);
+
+            int obsIndex = 0;
+
+            for (int y = -obsOffset; y <= obsOffset; y++)
+            {
+                for (int x = -obsOffset; x <= obsOffset; x++)
+                {
+                    Vector3I gridPos = pos + new Vector3I(x, 0, y);
+
+                    int index = GetGridIndex(gridPos);
+
+                    if (IsInnerCell(gridPos))
+                    {
+                        int obj = GetObjectInCell(gridPos);
+                        float bombValue = bombValues[index];
+                        if (bombValue != 0)
+                        {
+                            playerBombObservations[obsIndex] = 0.5f * ((bombDetonationSpeed - bombValues[index]) / bombDetonationSpeed);
+                        }
+                        else
+                        {
+                            playerBombObservations[obsIndex] = obj == GridIndexes.fire ? 1 : 0;
+                        }
+
+                        int teamID = playerMapSensor[index];
+                        if (teamID != 0)
+                        {
+                            if (teamID == sourcePlayerTeamID)
+                                playerMapObservations[obsIndex] = gridObsValues[GridIndexes.friendlyPlayer];
+                            else
+                                playerMapObservations[obsIndex] = gridObsValues[GridIndexes.enemyPlayer];
+                        }
+                        else
+                        {
+                            playerMapObservations[obsIndex] = mapSensor[index];
+                        }
+
+                    }
+                    else
+                    {
+                        playerMapObservations[obsIndex] = gridObsValues[GridIndexes.indestructibleWall];
+                        playerBombObservations[obsIndex] = 0;
+                    }
+                    obsIndex++;
+                }
+
+
+            }
+
+            if (!isEnemy)
+            {
+                var strength = playerBombObservations[playerMapObservations.Count / 2];
+                if (strength > 0)
+                {
+                    targetPlayer.OnDangerousTileTouched(strength);
+                }
+                else
+                {
+                    targetPlayer.OnNormalTileTouched();
+                }
+            }
+
+
+            //if (printObs)
+            //{
+            //    String msg = "";
+            //    obsIndex = 0;
+            //    for (int y = -obsOffset; y <= obsOffset; y++)
+            //    {
+            //        String msg1 = "";
+            //        for (int x = -obsOffset; x <= obsOffset; x++)
+            //        {
+            //            msg1 += playerMapObservations[obsIndex] + " ";
+            //            obsIndex++;
+            //        }
+            //        msg += msg1 + "\n";
+            //    }
+
+            //    GD.Print(msg);
+            //}
+
+            if (visualizeObs && sourcePlayerIndex == 0)
+            {
+                obsNodes[targetPlayer.playerIndex].Position = GetGridPosition(targetPlayer.Position);
+                obsIndex = 0;
+                for (int y = -obsOffset; y <= obsOffset; y++)
+                {
+                    for (int x = -obsOffset; x <= obsOffset; x++)
+                    {
+                        var obs1 = playerMapObservations[obsIndex] / 4f;
+                        var obs2 = playerBombObservations[obsIndex];
+                        var material = (StandardMaterial3D)obsNodeMaterials[targetPlayer.playerIndex][obsIndex];
+                        material.AlbedoColor = new Color(obs2, obs1, 0, 0.8f);
+
+                        obsIndex++;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            GD.Print(e);
+            for (int i = 0; i < playerMapObservations.Count; i++)
+            {
+                playerMapObservations[i] = 0;
+                playerBombObservations[i] = 0;
+            }
+        }
+
+        return dict;
+    }
+    int GetGridIndex(Vector3I pos)
+    {
+        return (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
+    }
+    public static Vector3I GetGridPosition(Vector3 position)
+    {
+        position.Y = 0;
+        return new Vector3I(
+            (int)(position.X + 0.5f * (position.X > 0 ? 1 : -1)),
+            (int)position.Y,
+             (int)(position.Z + 0.5f * (position.Z > 0 ? 1 : -1))
+        );
+    }
     protected Vector3I GetRandomInnerCell()
     {
-        return new Vector3I(-arenaOffset+1 + random.Next(0,arenaSize-2),0, -arenaOffset+1 + random.Next(0, arenaSize-2));
+        return new Vector3I(-arenaOffset + 1 + random.Next(0, arenaSize - 2), 0, -arenaOffset + 1 + random.Next(0, arenaSize - 2));
     }
-
     protected Vector3I GetRandomEmptyInnerCell()
     {
         Vector3I pos;
         do
         {
             pos = GetRandomInnerCell();
-        } while (GetObjectInCell(pos) != -1);
+        } while (GetObjectInCell(pos) != GridIndexes.empty);
 
         return pos;
     }
-
-    bool IsInnerCell(Vector3I pos)
-    {
-        return pos.X >= (-arenaOffset + 1) && pos.Z >= (-arenaOffset + 1) && pos.X < (-arenaOffset - 1 + arenaSize) && pos.Z < (-arenaOffset - 1 + arenaSize);
-    }
-
-    public bool PlaceBomb(Vector3 position, int playerIndex)
-    {
-
-        Vector3I pos = GetGridPosition(position);
-        if (gridmap.GetCellItem(pos) != GridMap.InvalidCellItem)
-            return false;
-
-        //AddBomb(pos, playerID);
-        UpdateMapCell(pos, GridIndexes.bomb);
-
-        bombs[pos] = new Bomb(bombDetonationSpeed, playerIndex);
-        return true;
-    }
-
     public int GetObjectInCell(Vector3 position)
     {
         position.Y = 0;
         return gridmap.GetCellItem(GetGridPosition(position));
     }
-
-
-
+    
     public override void _Ready()
     {
         if (visualizeObs)
         {
-            obsNodeMaterials = new();
+            obsNodeMaterials.Add(new());
+
             var scene = GD.Load<PackedScene>("res://Scenes//ObsTile.tscn");
-            obsNode = GetNode<Node3D>("Obs");
+
+            var obsNode = GetNode<Node3D>("Obs");
+
+            obsNodes.Add(new Node3D());
+            obsNode.AddChild(obsNodes[0]);
+
 
             for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
             {
                 for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
                 {
                     MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
-                    instance.Position = new Vector3(x, 1.01f, y);
-                    //instance.Transparency = 0.5f;
+                    instance.Position = new Vector3(x, 1.02f, y);
 
                     instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
-                    obsNode.AddChild(instance);
-                    obsNodeMaterials.Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+                    obsNodes[0].AddChild(instance);
+                    obsNodeMaterials[0].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
                 }
-            } 
+            }
+
+            for (int i = 1; i < 4; i++)
+            {
+                obsNodes.Add(new Node3D());
+                obsNode.AddChild(obsNodes[i]);
+
+                obsNodeMaterials.Add(new());
+                for (int y = -enemyMapObservationsOffset; y <= enemyMapObservationsOffset; y++)
+                {
+                    for (int x = -enemyMapObservationsOffset; x <= enemyMapObservationsOffset; x++)
+                    {
+                        MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
+                        instance.Position = new Vector3(x, 1.01f, y);
+
+                        instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
+                        obsNodes[i].AddChild(instance);
+                        obsNodeMaterials[i].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+                    }
+                }
+            }
+
         }
-        
+
         mapSensor.Resize(arenaSize * arenaSize);
         playerMapSensor.Resize(arenaSize * arenaSize);
 
@@ -196,9 +335,9 @@ public partial class GameManager : Node3D
         for (int i = 0; i < arenaSize; i++)
         {
             UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.Z += arenaSize-1;
+            currentPos.Z += arenaSize - 1;
             UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.Z -= arenaSize-1;
+            currentPos.Z -= arenaSize - 1;
             currentPos.X += 1;
         }
         currentPos.X -= arenaSize;
@@ -212,10 +351,10 @@ public partial class GameManager : Node3D
         }
 
 
-        for (int i = 0; i  < players.Count; i++)
+        for (int i = 0; i < players.Count; i++)
         {
             players[i].playerIndex = i;
-            lastPlayerPositions[i] = new Vector3I(0,0,0);
+            lastPlayerPositions[i] = new Vector3I(0, 0, 0);
         }
 
         if (!(bool)GetTree().Root.GetChild(0).FindChild("Sync", false).Get("should_connect_to_server"))
@@ -224,12 +363,11 @@ public partial class GameManager : Node3D
             StartGame();
         }
     }
-
     public override void _PhysicsProcess(double delta)
     {
         if (waitForServer)
         {
-            
+
             bool resetGame = true;
             for (int i = 0; i < playerCount; i++)
             {
@@ -269,7 +407,7 @@ public partial class GameManager : Node3D
 
                 if (bomb.Value.timeToDetonate <= 0)
                 {
-                    SetTilesOnFire(bomb.Key); // bomb.Value.strength
+                    SetTilesOnFire(bomb.Key);
                 }
             }
 
@@ -292,7 +430,7 @@ public partial class GameManager : Node3D
                 fire.Value.timeToDisappear -= delta;
                 if (fire.Value.timeToDisappear <= 0)
                 {
-                    UpdateMapCell(fire.Key, -1);
+                    UpdateMapCell(fire.Key, GridIndexes.empty);
                     fires.Remove(fire.Key);
                 }
             }
@@ -311,7 +449,7 @@ public partial class GameManager : Node3D
         for (int i = 0; i < playerCount; i++)
         {
             var player = players[i];
-            if (player.Lives == 0)
+            if (player.IsDead)
                 continue;
 
             var pos = GetGridPosition(player.Position);
@@ -327,23 +465,23 @@ public partial class GameManager : Node3D
         //    printDelta = 0;
         //}
 
-        if (players[0].IsHuman)
-            GetObservationsAroundPlayer(0, false);
+        //if (players[0].IsHuman)
+        //{
+        //    GetObservationsAroundPlayer(0, 1, false, false);
+        //}
     }
-
     protected virtual void StartGame()
     {
         StartGame(() => DefaultGameMode());
     }
-
     protected void StartGame(Action gameMode)
     {
-        // clean
+        // cleanup
         bombs.Clear();
         fires.Clear();
         Array.Clear(bombValues, 0, bombValues.Length);
 
-        // clean
+        // cleanup
         Vector3I pos = new Vector3I();
         for (int z = -arenaOffset + 1; z < -arenaOffset + arenaSize - 1; z++)
         {
@@ -351,37 +489,15 @@ public partial class GameManager : Node3D
             {
                 pos.X = x;
                 pos.Z = z;
-                UpdateMapCell(pos, -1);
+                UpdateMapCell(pos, GridIndexes.empty);
             }
         }
 
+        // place tiles  
         gameMode();
-        //{
 
-        //for (int i = 0; i < 10; i++)
-        //{
-        //    var cell = GetRandomInnerCell();
-        //    //for (int zz = -1; zz <= 1; zz++)
-        //    //{
-        //    //    for (int xx = -1; xx <= 1; xx++)
-        //    //    {
-        //    //        var newCell = cell + new Vector3I(xx, 0, zz);
-        //    //        if(IsInnerCell(newCell))
-        //    //            UpdateMapCell(newCell, GridIndexes.collectible1);
-        //    //    }
-        //    //}
-        //    UpdateMapCell(cell, GridIndexes.collectible1);
-        //}
-
-        //spawnPositions
-
-        alivePlayerCount = playerCount;
-
-        //int[] spawnOrder = new int[]{ 0,1,2,3};
-        //int[] MyRandomNumbers = spawnOrder.OrderBy(x => random.Next()).ToArray();
-
+        // spawn players
         HashSet<int> usedSpawnPositions = new();
-
 
         for (int i = 0; i < playerCount; i++)
         {
@@ -395,20 +511,83 @@ public partial class GameManager : Node3D
             usedSpawnPositions.Add(spawnPositionIndex);
 
             var spawnPos = spawnPositions[spawnPositionIndex];
+            var scale = (random.NextDouble() * 0.8f) + 0.2f;
+            spawnPos = new Vector3I((int)(spawnPos.X * scale), spawnPos.Y, (int)(spawnPos.Z * scale));
+
             player.Spawn(spawnPos);
         }
         usedSpawnPositions.Clear();
     }
+    public void ForceEndGame()
+    {
+        for (int i = 0; i < playerCount; i++)
+        {
+            var player = players[i];
+            player.Despawn();
+        }
 
+        StartGame();
+
+    }
+
+    public bool PlaceBomb(Vector3 position, int playerIndex, out float rating)
+    {
+        rating = 0;
+
+        Vector3I pos = GetGridPosition(position);
+        if (gridmap.GetCellItem(pos) != GridIndexes.empty)
+            return false;
+
+        UpdateMapCell(pos, GridIndexes.bomb);
+
+        bombs[pos] = new Bomb(bombDetonationSpeed, playerIndex);
+
+        rating = RateBombPlacement(pos, players[playerIndex].TeamID);
+        return true;
+    }
+    float RateBombPlacement(Vector3I pos, int sourcePlayerTeamID)
+    {
+        float rating = 0;
+        // can player get out of the situation? no -> -1, return
+
+        // is anyone around? no -> -0.25, yes -> +0.2 per player
+        bool foundEnemy = false;
+        for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
+        {
+            for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
+            {
+                Vector3I gridPos = pos + new Vector3I(x, 0, y);
+
+                int index = GetGridIndex(gridPos);
+
+                if (IsInnerCell(gridPos))
+                {
+                    int teamID = playerMapSensor[index];
+                    if (teamID != 0)
+                    {
+                        if (teamID != sourcePlayerTeamID)
+                        {
+                            rating += 0.2f;
+                            foundEnemy = true;
+                        }
+                    }
+                }
+            }
+        }
+        if (!foundEnemy)
+            rating -= 0.25f;
+
+        // is something in bomb radius? yes -> +0.4
+
+        return rating;
+    }
     protected void DefaultGameMode()
     {
         AddIndestructibleWalls();
         AdddestructibleWalls();
     }
-
     protected void AddIndestructibleWalls()
     {
-        // add indestructible walls
         var currentPos = new Vector3I(-arenaOffset + 2, 0, -arenaOffset + 2);
         for (int z = 0; z < arenaOffset - 1; z++)
         {
@@ -421,10 +600,8 @@ public partial class GameManager : Node3D
             currentPos.Z += 2;
         }
     }
-
     protected void AdddestructibleWalls()
     {
-        // add random destructible walls
         for (int i = 0; i < 100; i++)
         {
             UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
@@ -437,86 +614,17 @@ public partial class GameManager : Node3D
             {
                 Vector3I newPos = spawnPos + new Vector3I(x, 0, 0);
                 if (IsInnerCell(newPos))
-                    UpdateMapCell(newPos, -1);
+                    UpdateMapCell(newPos, GridIndexes.empty);
             }
 
             for (int z = -1; z <= 1; z += 2)
             {
                 Vector3I newPos = spawnPos + new Vector3I(0, 0, z);
                 if (IsInnerCell(newPos))
-                    UpdateMapCell(newPos, -1);
+                    UpdateMapCell(newPos, GridIndexes.empty);
             }
         }
     }
-
-    public void OnPlayerHit(int teamID, Vector3 playerPosition)
-    {
-        if (!fires.TryGetValue(GetGridPosition(playerPosition), out var fire)){
-            return;
-        }
-        var fireTeamID = fire.teamID;
-        if (fireTeamID == teamID)
-        {
-            for (int i = 0; i < playerCount; i++)
-            {
-                var currentPlayer = players[i];
-                if (currentPlayer.TeamID == teamID)
-                {
-                    // GD.Print($"player from team {currentPlayer.TeamID} hit themselves");
-                    currentPlayer.OnTeamHit();
-                }
-            }
-        }
-        else
-        {
-            for (int i = 0; i < playerCount; i++)
-            {
-                var currentPlayer = players[i];
-                if (currentPlayer.TeamID == fireTeamID)
-                {
-                    //GD.Print($"player from team {currentPlayer.TeamID} hit someone from team {teamID}");
-                    currentPlayer.OnEnemyTeamHit();
-                }
-                else if(currentPlayer.TeamID == teamID)
-                {
-                    //GD.Print($"player from team {currentPlayer.TeamID} received a hit from team {fireTeamID}");
-                    currentPlayer.OnTeamHit();
-                }
-            }
-        }
-        
-    }
-
-    public void OnPlayerDeath(int playerID)
-    {
-        alivePlayerCount--;
-        if(alivePlayerCount <= 1)
-        {
-            for(int i = 0; i < playerCount; i++)
-            {
-                var player = players[i];
-                if(player.Lives > 0)
-                {
-                    player.OnTeamWin();
-                    player.Despawn();
-                }
-            }
-            StartGame();
-        }
-    }
-
-    public void ForceEndGame()
-    {
-        for (int i = 0; i < playerCount; i++)
-        {
-            var player = players[i];
-            player.Despawn();
-        }
-
-        StartGame();
-        
-    }
-
     void UpdateMapCell(Vector3I pos, int what)
     {
         pos.Y = 0;
@@ -525,7 +633,7 @@ public partial class GameManager : Node3D
         {
             gridmap.SetCellItem(pos, what);
 
-            float valueToAdd;
+            int valueToAdd;
             try
             {
                 valueToAdd = gridObsValues[what];
@@ -540,38 +648,30 @@ public partial class GameManager : Node3D
             index = GetGridIndex(pos);
             mapSensor[index] = valueToAdd;
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             GD.PrintErr($"Failed to update map cell in position {pos} (what = {what}, index = {index}), error:\n{e}");
             ForceEndGame();
         }
     }
-
-
     void UpdatePlayerCell(Vector3I pos, int teamID)
     {
         pos.Y = 0;
         int index = GetGridIndex(pos);
-        if(index >= playerMapSensor.Count || index < 0)
+        if (index >= playerMapSensor.Count || index < 0)
         {
             GD.PrintErr($"Error :: {index}, {pos}");
-            ForceEndGame(); // asi?
+            ForceEndGame();
         }
         else
         {
             playerMapSensor[index] = teamID;
         }
-        
-    }
 
-    int GetGridIndex(Vector3I pos)
-    {
-        return (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
     }
 
     HashSet<Vector3I> usedBombs = new();
     HashSet<Vector3I> currentBombs = new();
-
     void SimulateDetonationTimes()
     {
         Array.Clear(bombValues, 0, bombValues.Length);
@@ -583,17 +683,13 @@ public partial class GameManager : Node3D
                 continue;
 
             var detonationTime = GetLowestDetonationTime(bomb.Key, bomb.Value, (float)bomb.Value.timeToDetonate);
-            // GD.Print($"value after: {detonationTime}, bomb: {bomb.Key}");
             FillDetonationTimes(detonationTime);
             currentBombs.Clear();
         }
     }
-
-
     float GetLowestDetonationTime(Vector3I pos, Bomb bomb, float currentLowestValue)
     {
         float lowestValue = Mathf.Min(currentLowestValue, (float)bomb.timeToDetonate);
-        // GD.Print($"values before: {lowestValue}, bomb: {pos}");
         currentBombs.Add(pos);
         usedBombs.Add(pos);
 
@@ -621,13 +717,11 @@ public partial class GameManager : Node3D
             }
         }
 
-
         return lowestValue;
     }
-
     void FillDetonationTimes(float detonationTime)
     {
-        foreach(Vector3I pos in currentBombs)
+        foreach (Vector3I pos in currentBombs)
         {
             var bomb = bombs[pos];
 
@@ -652,7 +746,7 @@ public partial class GameManager : Node3D
                     {
                         break;
                     }
-                    else if(item == GridIndexes.fire)
+                    else if (item == GridIndexes.fire)
                     {
                         continue;
                     }
@@ -676,7 +770,7 @@ public partial class GameManager : Node3D
             GD.Print($"removed bomb found at{pos}");
             return;
         }
-            
+
 
         int playerIndex = bomb.playerIndex;
         Character player = players[playerIndex];
@@ -689,30 +783,28 @@ public partial class GameManager : Node3D
 
         foreach (Vector3I direction in directions)
         {
-            for(int i = 1; i <= bombStrength; i++)
+            for (int i = 1; i <= bombStrength; i++)
             {
                 Vector3I newPos = pos + direction * i;
 
-                int item = GetObjectInCell(newPos); // gridmap.GetCellItem(newPos);
-                if(item == GridIndexes.bomb)
+                int item = GetObjectInCell(newPos);
+                if (item == GridIndexes.bomb)
                 {
                     SetTilesOnFire(newPos);
-                    //bombs.Remove(newPos);
                     break;
                 }
-                if(item == GridIndexes.destructibleWall)
+                if (item == GridIndexes.destructibleWall)
                 {
                     player.OnWallDestroyed();
                     HandleFireInsertion(newPos, teamID);
                     break;
                 }
-                else if (item != GridMap.InvalidCellItem && item != GridIndexes.fire)
+                else if (item != GridIndexes.empty && item != GridIndexes.fire)
                 {
                     break;
                 }
 
                 HandleFireInsertion(newPos, teamID);
-
             }
         }
     }
@@ -724,165 +816,74 @@ public partial class GameManager : Node3D
         UpdateMapCell(pos, GridIndexes.fire);
     }
 
-    public Godot.Collections.Array<float> GetObservationsAroundPlayer(int playerIndex, bool printObs = false)
+    public void OnCollectibleCollected(Vector3 position)
     {
-        Godot.Collections.Array<float> playerMapObservations = new();
-        playerMapObservations.Resize(playerMapObservationsSize * playerMapObservationsSize);
+        Vector3I pos = GetGridPosition(position);
+        UpdateMapCell(pos, GridIndexes.empty);
 
-        var player = players[playerIndex];
-        if(player.Lives == 0)
+        var playerPos = GetGridPosition(position);
+        var cell = GetRandomInnerCell();
+
+        while (playerPos == cell)
         {
-            for (int i = 0; i < playerMapObservations.Count; i++)
-            {
-                playerMapObservations[i] = 0;
-            }
-            return playerMapObservations;
+            cell = GetRandomInnerCell();
         }
-        try
-        {
-            Vector3I pos = GetGridPosition(player.Position);
-
-            int obsIndex = 0;
-
-            for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
-            {
-                for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
-                {
-                    Vector3I gridPos = pos + new Vector3I(x, 0, y);
-
-                    int index = GetGridIndex(gridPos);
-
-                    if (IsInnerCell(gridPos))
-                    {
-                        int obj = GetObjectInCell(gridPos);
-                        float bombValue = bombValues[index];
-                        if (/*obj == GridIndexes.bomb*/ bombValue != 0)
-                        {
-                            //var bomb = bombs[gridPos];
-                            // { GridIndexes.bomb, -0.5f},
-                            // { GridIndexes.fire, -1f},
-                            playerMapObservations[obsIndex] = gridObsValues[GridIndexes.fire] 
-                                + (gridObsValues[GridIndexes.bomb] - gridObsValues[GridIndexes.fire]) * (bombValue / bombDetonationSpeed);
-                        }
-                        else
-                        {
-                            int teamID = playerMapSensor[index];
-                            if (teamID != 0 && obj != GridIndexes.fire)
-                            {
-                                if (teamID == player.TeamID)
-                                    playerMapObservations[obsIndex] = gridObsValues[GridIndexes.friendlyPlayer];
-                                else
-                                    playerMapObservations[obsIndex] = gridObsValues[GridIndexes.enemyPlayer];
-                            }
-                            else
-                            {
-                                playerMapObservations[obsIndex] = mapSensor[index];
-                            }
-                        }
-                    }
-                    else
-                    {
-                        playerMapObservations[obsIndex] = gridObsValues[GridIndexes.indestructibleWall];
-                    }
-
-                   
-
-                    obsIndex++;
-                }
-
-
-            }
-
-            // TODO: Update bomb detonation times for obs
-
-
-
-            // 
-            var strength = playerMapObservations[playerMapObservations.Count / 2];
-            if (strength <= gridObsValues[GridIndexes.bomb])
-            {
-                //GD.Print(-strength);
-                player.OnDangerousTileTouched(-strength);
-            }
-            else
-            {
-                player.OnNormalTileTouched();
-            }
-
-
-
-            if (printObs)
-            {
-                String msg = "";
-                obsIndex = 0;
-                for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
-                {
-                    String msg1 = "";
-                    for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
-                    {
-                        msg1 += playerMapObservations[obsIndex] + " ";
-                        obsIndex++;
-                    }
-                    msg += msg1 + "\n";
-                }
-
-                GD.Print(msg);
-            }
-
-            if (visualizeObs)
-            {
-                obsNode.Position = GetGridPosition(player.Position);
-                obsIndex = 0;
-                for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
-                {
-                    for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
-                    {
-                        var obs = playerMapObservations[obsIndex];
-                        var idk = (StandardMaterial3D)obsNodeMaterials[obsIndex];
-                        if(obs >= 0)
-                        {
-                            idk.AlbedoColor = new Color(0, obs, 0, 0.8f);
-                        }
-                        else
-                        {
-                            idk.AlbedoColor = new Color(-obs, 0, 0, 0.8f);
-                        }
-                        
-                        obsIndex++;
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            GD.Print(e);
-            for (int i = 0; i < playerMapObservations.Count; i++)
-            {
-                playerMapObservations[i] = 0;
-            }
-        }
-
-        return playerMapObservations;
+        UpdateMapCell(cell, GridIndexes.collectible1);
     }
-
-    public Vector3I GetGridPosition2(Vector3 position)
+    public void OnPlayerHit(int teamID, Vector3 playerPosition)
     {
-        position.Y = 0;
-        return new Vector3I(
-            (int)(position.X + 0.5f * (position.X > 0 ? 1 : -1)),
-            (int)position.Y,
-             (int)(position.Z + 0.5f * (position.Z > 0 ? 1 : -1))
-        );
+        if (!fires.TryGetValue(GetGridPosition(playerPosition), out var fire))
+        {
+            return;
+        }
+        var fireTeamID = fire.teamID;
+        if (fireTeamID == teamID)
+        {
+            for (int i = 0; i < playerCount; i++)
+            {
+                var currentPlayer = players[i];
+                if (currentPlayer.TeamID == teamID)
+                {
+                    // GD.Print($"player from team {currentPlayer.TeamID} hit themselves");
+                    currentPlayer.OnTeamHit();
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < playerCount; i++)
+            {
+                var currentPlayer = players[i];
+                if (currentPlayer.TeamID == fireTeamID)
+                {
+                    //GD.Print($"player from team {currentPlayer.TeamID} hit someone from team {teamID}");
+                    currentPlayer.OnEnemyTeamHit();
+                }
+                else if (currentPlayer.TeamID == teamID)
+                {
+                    //GD.Print($"player from team {currentPlayer.TeamID} received a hit from team {fireTeamID}");
+                    currentPlayer.OnTeamHit();
+                }
+            }
+        }
+
     }
-
-    public static Vector3I GetGridPosition(Vector3 position)
+    public virtual void OnPlayerDeath(int playerIndex)
     {
-        position.Y = 0;
-        return new Vector3I(
-            (int)(position.X + 0.5f * (position.X > 0 ? 1 : -1)),
-            (int)position.Y,
-             (int)(position.Z + 0.5f * (position.Z > 0 ? 1 : -1))
-        );
+        alivePlayerCount--;
+        if (alivePlayerCount <= 1)
+        {
+            for (int i = 0; i < playerCount; i++)
+            {
+                var player = players[i];
+                if (player.Lives > 0)
+                {
+                    player.OnTeamWin();
+                    player.Despawn();
+                }
+            }
+            StartGame();
+        }
     }
 
     class Bomb
@@ -897,10 +898,8 @@ public partial class GameManager : Node3D
             this.playerIndex = playerIndex;
         }
     }
-
     class Fire
     {
-        //public List<Vector3I> positions = new();
         public double timeToDisappear;
         public int teamID;
 

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_mir2y"]
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="2_ki3dt"]
-[ext_resource type="PackedScene" uid="uid://byrseyv36jm2f" path="res://Scenes/characterVsTest.tscn" id="3_xnukp"]
+[ext_resource type="PackedScene" uid="uid://byrseyv36jm2f" path="res://Scenes/Characters/characterVsTest.tscn" id="3_xnukp"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
 size = Vector3(17, 1, 17)
@@ -25,7 +25,6 @@ size = Vector3(1, 1, 15)
 [node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
 script = ExtResource("1_mir2y")
 gridmap = NodePath("Map/GridMap")
-playerCount = 4
 players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
 
 [node name="Map" type="Node3D" parent="."]

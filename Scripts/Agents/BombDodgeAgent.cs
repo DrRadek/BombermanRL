@@ -9,7 +9,7 @@ public partial class BombDodgeAgent : Character
         //DefaultMaxSpawnedBombs = 0;
     }
 
-    protected override void OnBombPlaced()
+    protected override void OnBombPlaced(float rating)
     {
         AddReward(0.1f);
     }

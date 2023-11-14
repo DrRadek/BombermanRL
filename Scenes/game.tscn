@@ -2,7 +2,7 @@
 
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="1_52dkk"]
 [ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_ow57k"]
-[ext_resource type="PackedScene" uid="uid://bjlat40nawjeq" path="res://Scenes/characterMovementTest.tscn" id="4_141m5"]
+[ext_resource type="PackedScene" uid="uid://bjlat40nawjeq" path="res://Scenes/Characters/characterMovementTest.tscn" id="4_141m5"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
 size = Vector3(17, 1, 17)

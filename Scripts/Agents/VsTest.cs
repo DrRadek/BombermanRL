@@ -13,7 +13,7 @@ public partial class VsTest : Character
         AddReward(-2);
     }
 
-    protected override void OnBombPlaced()
+    protected override void OnBombPlaced(float rating)
     {
         //AddReward(0.1f);
     }
