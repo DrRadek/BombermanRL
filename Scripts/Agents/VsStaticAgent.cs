@@ -29,10 +29,24 @@ public partial class VsStaticAgent : Character
     }
     public override void OnDangerousTileTouched(float strength)
     {
-        //AddReward(-0.01f * strength);
+        if(strength > 0.3f)
+            AddReward(-0.01f * strength);
     }
     public override void OnNormalTileTouched()
     {
-        AddReward(0.03f);
+        if(TimeWithoutUsingBomb <= 5)
+        {
+            AddReward(0.01f);
+        }
+        else if (TimeWithoutUsingBomb > 15)
+        {
+            gameManager.ForceEndGame();
+        }
+        else if (TimeWithoutUsingBomb > 10)
+        {
+            AddReward(-0.01f);
+        }
+
+
     }
 }

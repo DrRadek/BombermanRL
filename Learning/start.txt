@@ -40,4 +40,4 @@ gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_envs_per_worker=4 --
 gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_envs_per_worker=1 --num_workers=1 --worker_num_splits=1 --restart_behavior=overwrite --viz
 gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --num_envs_per_worker=4 --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=10000000 --use_rnn=True --recurrence=32 --viz
 
-gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=10000000 --use_rnn=True --recurrence=32 --viz --num_workers=8 --lr_schedule=kl_adaptive_epoch --num_epochs=2 --with_pbt=True --pbt_period_env_steps=1000000 --pbt_start_mutation=1000000
+ gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --device=gpu --batched_sampling=True --train_for_env_steps=10000000 --use_rnn=True --recurrence=32 --viz --num_workers=8 --lr_schedule=kl_adaptive_epoch --num_epochs=2 --with_pbt=True --pbt_period_env_steps=1000000 --pbt_start_mutation=1000000

@@ -56,6 +56,7 @@ public partial class Character : CharacterBody3D
     int bombStrength = 0;
     double maxBombCooldown = Mathf.Max(bombCooldownAfterUse, bombCooldownAfterSpawn);
     double bombDelta = bombCooldownAfterSpawn;
+    double timeWithoutUsingBomb = 0;
 
     public int Lives { get => lives; private set => lives = value; }
     public double InvulnerabilityTime { get => invulnerabilityTime; set => invulnerabilityTime = value; }
@@ -69,6 +70,7 @@ public partial class Character : CharacterBody3D
     public bool IsDead { get => lives == 0; }
     private bool IsInvulnerable { get => isInvulnerable; set => isInvulnerable = value; }
     private int MaxSpawnedBombs { get => maxSpawnedBombs; set => maxSpawnedBombs = value; }
+    protected double TimeWithoutUsingBomb { get => timeWithoutUsingBomb; private set => timeWithoutUsingBomb = value; }
 
     Vector3 GetLocalPlayerPos()
     {
@@ -167,6 +169,7 @@ public partial class Character : CharacterBody3D
 
         if (bombInput)
         {
+            timeWithoutUsingBomb = 0;
             if (isInvulnerable || spawnedBombs >= maxSpawnedBombs || bombDelta > 0)
             {
                 OnBombFailedToPlace();
@@ -184,6 +187,10 @@ public partial class Character : CharacterBody3D
                     spawnedBombs++;
                 }
             }
+        }
+        else
+        {
+            timeWithoutUsingBomb += delta;
         }
 
         Vector3 velocity = Velocity;
@@ -286,6 +293,7 @@ public partial class Character : CharacterBody3D
         flickerFrame = false;
         flickerDelta = 0;
         bombDelta = bombCooldownAfterSpawn;
+        timeWithoutUsingBomb = 0;
 
         waitAfterSpawn = true;
     }
