@@ -14,7 +14,8 @@ instanceCounts = [1, 1, 4]
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("2_krds0")
-action_repeat = 6
+action_repeat = 4
+speed_up = 4
 onnx_model_path = "res://Learning/model.onnx"
 should_connect_to_server = true
 

@@ -37,7 +37,7 @@ public partial class Character : CharacterBody3D
     int defaultMaxSpawnedBombs = 3;
     int defaultBombStrength = 3;
 
-    const int maxLives = 3;
+    int defaultMaxLives = 3;
     int lives = 0;
 
     // invulnerability info
@@ -71,6 +71,7 @@ public partial class Character : CharacterBody3D
     private bool IsInvulnerable { get => isInvulnerable; set => isInvulnerable = value; }
     private int MaxSpawnedBombs { get => maxSpawnedBombs; set => maxSpawnedBombs = value; }
     protected double TimeWithoutUsingBomb { get => timeWithoutUsingBomb; private set => timeWithoutUsingBomb = value; }
+    public int DefaultMaxLives { get => defaultMaxLives;protected set => defaultMaxLives = value; }
 
     Vector3 GetLocalPlayerPos()
     {
@@ -78,7 +79,7 @@ public partial class Character : CharacterBody3D
     }
     float GetNormalizedLives()
     {
-        return lives / (float)maxLives;
+        return lives / (float)defaultMaxLives;
     }
     public Godot.Collections.Array<float> GetObs()
     {
@@ -97,13 +98,28 @@ public partial class Character : CharacterBody3D
         }
         else
         {
-            for (int i = 0; i < obs.Count; i++)
-            {
-                obs[i] = 0;
-            }
+            obs.Fill(0);
         }
         return obs;
     }
+    //
+    float lastLowestDistanceFromEnemies = float.MaxValue;
+    float lowestDistanceFromEnemies = float.MaxValue;
+
+    public void CheckDistanceFromEnemies()
+    {
+        if(lowestDistanceFromEnemies < lastLowestDistanceFromEnemies)
+            OnGetsCloserToEnemy();
+
+        lastLowestDistanceFromEnemies = lowestDistanceFromEnemies;
+        lowestDistanceFromEnemies = float.MaxValue;
+    }
+
+    public virtual void OnGetsCloserToEnemy()
+    {
+
+    }
+    //\
     public Godot.Collections.Array<float> GetEnemyObs(Character character)
     {
         Godot.Collections.Array<float> obs = new();
@@ -111,9 +127,10 @@ public partial class Character : CharacterBody3D
         if (!IsDead)
         {
             Vector3 pos = GetLocalPlayerPos();
-            Vector3 direction = character.Position - Position;
+            Vector3 direction = (character.Position - Position) / GameManager.arenaSize;
             direction.Y = 0;
-            direction = direction.Normalized();
+            lowestDistanceFromEnemies = Math.Min(lowestDistanceFromEnemies, direction.Length());
+            //direction = direction.Normalized();
 
             obs[0] = pos.X;
             obs[1] = pos.Z;
@@ -126,10 +143,7 @@ public partial class Character : CharacterBody3D
         }
         else
         {
-            for (int i = 0; i < obs.Count; i++)
-            {
-                obs[i] = 0;
-            }
+            obs.Fill(0);
         }
         return obs;
     }
@@ -277,7 +291,7 @@ public partial class Character : CharacterBody3D
             isHuman = true;
         }
 
-        lives = maxLives;
+        lives = defaultMaxLives;
 
         Position = new Vector3(pos.X, Position.Y, pos.Z);
         Velocity = Vector3.Zero;
@@ -296,6 +310,9 @@ public partial class Character : CharacterBody3D
         timeWithoutUsingBomb = 0;
 
         waitAfterSpawn = true;
+
+        lastLowestDistanceFromEnemies = float.MaxValue;
+        lowestDistanceFromEnemies = float.MaxValue;
     }
     public void Despawn()
     {
@@ -344,6 +361,7 @@ public partial class Character : CharacterBody3D
             if (IsDead)
             {
                 Despawn();
+                OnDeath();
                 gameManager.OnPlayerDeath(playerIndex);
             }
 
@@ -393,6 +411,10 @@ public partial class Character : CharacterBody3D
         //AddReward(1);
     }
     protected virtual void OnDefaultValuesSet()
+    {
+
+    }
+    protected virtual void OnDeath()
     {
 
     }

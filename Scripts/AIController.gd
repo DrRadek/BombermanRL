@@ -17,7 +17,7 @@ func init(player: Node3D):
 	_player = player
 	game_manager = player.gameManager
 
-func _physics_process(delta):
+func _physics_process(_delta):
 	if _player.IsHuman and _player.playerIndex == 0:
 		get_obs()
 
@@ -37,6 +37,8 @@ func get_obs() -> Dictionary:
 		var obs = game_manager.GetObservationsAroundPlayer(id, i)
 		players_obs.append_array(obs[obs_around_player_name])
 		players_obs_bomb.append_array(obs[obs_around_player_bomb_name])		
+
+	_player.CheckDistanceFromEnemies()
 
 	var player = _player.GetObs()
 	var obs = game_manager.GetObservationsAroundPlayer(id, id)

@@ -13,16 +13,16 @@ public partial class EmptyArena : GameManager
 
     }
 
-    public override void OnPlayerDeath(int playerIndex)
-    {
-        if (playerIndex == players[0].playerIndex)
-        {
-            ForceEndGame();
-        }
-        else
-        {
-            base.OnPlayerDeath(playerIndex);
-        }
+    //public override void OnPlayerDeath(int playerIndex)
+    //{
+    //    if (playerIndex == players[0].playerIndex)
+    //    {
+    //        ForceEndGame();
+    //    }
+    //    else
+    //    {
+    //        base.OnPlayerDeath(playerIndex);
+    //    }
         
-    }
+    //}
 }

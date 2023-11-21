@@ -3,6 +3,8 @@ using System;
 
 public partial class ModeManager : Node
 {
+    [Export] bool useGlobalCamera = true;
+
     [Export]
     int modeIndex = 0;
 
@@ -14,6 +16,9 @@ public partial class ModeManager : Node
 
     public override void _Ready()
 	{
+        if(!useGlobalCamera)
+            GetNode("Camera3D").QueueFree();
+
         for(int i = 0; i < instanceCounts[modeIndex]; i++)
         {
             Node3D scene = (Node3D)modeScenes[modeIndex].Instantiate();

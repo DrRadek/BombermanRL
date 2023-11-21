@@ -25,7 +25,6 @@ size = Vector3(1, 1, 15)
 [node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
 script = ExtResource("1_ow57k")
 gridmap = NodePath("Map/GridMap")
-playerCount = 1
 players = [NodePath("CharacterMovementTest")]
 
 [node name="Map" type="Node3D" parent="."]
