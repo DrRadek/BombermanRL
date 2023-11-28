@@ -125,11 +125,12 @@ class GodotEnv:
             list: The converted action.
         """
         result = []
-
+        #print(action)
+        #print(self._action_space.keys())
         for i in range(self.num_envs):
             env_action = {}
-
             for j, k in enumerate(self._action_space.keys()):
+                
                 if order_ij == True:
                     v = action[i][j]
                 else:
@@ -172,6 +173,7 @@ class GodotEnv:
             "action": self.from_numpy(action, order_ij=order_ij),
         }
         self._send_as_json(message)
+        #print(action)
     
     def step_recv(self):
         """
@@ -182,7 +184,7 @@ class GodotEnv:
         """
         response = self._get_json_dict()
         response["obs"] = self._process_obs(response["obs"])
-
+        #print(response["obs"])
         return (
             response["obs"],
             response["reward"],
@@ -334,10 +336,14 @@ class GodotEnv:
         observation_spaces = {}
         print("observation space", json_dict["observation_space"])
         for k, v in json_dict["observation_space"].items():
-            low = -1.0 if not "low" in v else int(v["low"])
-            high = -1.0 if not "high" in v else int(v["high"])
+            low = -1.0 if not "low" in v else float(v["low"])
+            high = 1.0 if not "high" in v else float(v["high"])
             dtype = np.float32 if not "dtype" in v else np.int32
             if v["space"] == "box":
+                if dtype == np.int32:
+                    low = int(low)
+                    high = int(high)
+
                 observation_spaces[k] = spaces.Box(
                     low=low,
                     high=high,

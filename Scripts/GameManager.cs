@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Reflection;
 
 public partial class GameManager : Node3D
 {
@@ -123,6 +124,12 @@ public partial class GameManager : Node3D
                 foreach (Vector3I direction in directions)
                 {
                     Vector3I newPos = pos + direction;
+
+                    if (cellDistances.Contains(newPos) || !IsInnerCell(newPos))
+                    {
+                        continue;
+                    }
+
                     Vector3I newPosRelative = newPos - startPos;
                     if (Math.Abs(newPosRelative.X) > playerMapObservationsOffset || Math.Abs(newPosRelative.Y) > playerMapObservationsOffset)
                         continue;
@@ -133,11 +140,13 @@ public partial class GameManager : Node3D
                     int item2 = GridIndexes.empty;
                     try
                     {
+                        //GD.Print($"{playerIndex}, {index}");
                         item2 = playerMapObservations[playerIndex][index];
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-                        GD.Print($"index {index} out of range, pos: {newPosRelative}, index: {index} ({nameof(FindNearestSafeCell)})\nerror: {e}");
+                        GD.Print($"index {index} out of range, pos: {newPosRelative}, index: {index} ({nameof(FindNearestSafeCell)})");
+                        continue;
                     }
                     
 
@@ -146,12 +155,10 @@ public partial class GameManager : Node3D
                         continue;
                     }
 
-                    if (!IsInnerCell(newPos) || !cellDistances.Contains(newPos))
-                        cellDistances.Add(newPos);
-
                     if (playerBombObservations[playerIndex][index] > 0)
                     {
                         currentCellsNew.Enqueue(newPos);
+                        cellDistances.Add(newPos);
                     }
                     else
                     {
@@ -375,7 +382,7 @@ public partial class GameManager : Node3D
         do
         {
             pos = GetRandomInnerCell();
-        } while (GetObjectInCell(pos) != GridIndexes.empty);
+        } while (GetObjectInCell(pos) != GridIndexes.empty || playerMapSensor[GetGridIndex(pos)] != 0);
 
         return pos;
     }
@@ -605,31 +612,7 @@ public partial class GameManager : Node3D
             }
         }
 
-        // place tiles  
         gameMode();
-
-        // spawn players
-        HashSet<int> usedSpawnPositions = new();
-
-        alivePlayerCount = players.Count;
-        for (int i = 0; i < players.Count; i++)
-        {
-            var player = players[i];
-
-            int spawnPositionIndex;
-            do
-            {
-                spawnPositionIndex = random.Next(0, players.Count);
-            } while (usedSpawnPositions.Contains(spawnPositionIndex));
-            usedSpawnPositions.Add(spawnPositionIndex);
-
-            var spawnPos = spawnPositions[spawnPositionIndex];
-            var scale = (random.NextDouble() * 0.8f) + 0.2f;
-            spawnPos = new Vector3I((int)(spawnPos.X * scale), spawnPos.Y, (int)(spawnPos.Z * scale));
-
-            player.Spawn(spawnPos);
-        }
-        usedSpawnPositions.Clear();
     }
     public void ForceEndGame()
     {
@@ -642,7 +625,6 @@ public partial class GameManager : Node3D
         StartGame();
 
     }
-
     public bool PlaceBomb(Vector3 position, int playerIndex, out float rating)
     {
         rating = 0;
@@ -662,10 +644,12 @@ public partial class GameManager : Node3D
     {
         float rating = 0;
         // can player get out of the situation? no -> -1, return
-        if(FindNearestSafeCell(pos, sourcePlayerIndex) == null)
-        {
-            return -1;
-        }
+
+        // TODO: find the issue with this method
+        //if(FindNearestSafeCell(pos, sourcePlayerIndex) == null)
+        //{
+        //    return -1;
+        //}
 
         // is anyone around? no -> -0.25, yes -> +0.2 per player
         bool foundEnemy = false;
@@ -715,8 +699,9 @@ public partial class GameManager : Node3D
     }
     protected void DefaultGameMode()
     {
-        AddIndestructibleWalls();
         AdddestructibleWalls();
+        AddIndestructibleWalls();
+        SpawnInCorners();
     }
     protected void AddIndestructibleWalls()
     {
@@ -738,24 +723,97 @@ public partial class GameManager : Node3D
         {
             UpdateMapCell(GetRandomInnerCell(), GridIndexes.destructibleWall);
         }
+    }
+    protected void SpawnRandom()
+    {
+        alivePlayerCount = players.Count;
+        for (int i = 0; i < players.Count; i++)
+        {
+            var player = players[i];
 
-        // make empty space around corners
-        foreach (Vector3I spawnPos in spawnPositions)
+            var pos = GetRandomEmptyInnerCell();
+            SpawnPlayer(pos, player);
+            //UpdateMapCell(pos, GridIndexes.empty);
+            //player.Spawn(pos);
+            //UpdatePlayerCell(pos, player.TeamID);
+            //lastPlayerPositions[i] = pos;
+        }
+        //FreeSpaceAroundPlayers();
+    }
+    protected void SpawnInCorners()
+    {
+        HashSet<int> usedSpawnPositions = new();
+
+        alivePlayerCount = players.Count;
+        for (int i = 0; i < players.Count; i++)
+        {
+            var player = players[i];
+
+            int spawnPositionIndex;
+            do
+            {
+                spawnPositionIndex = random.Next(0, players.Count);
+            } while (usedSpawnPositions.Contains(spawnPositionIndex));
+            usedSpawnPositions.Add(spawnPositionIndex);
+
+            var spawnPos = spawnPositions[spawnPositionIndex];
+
+            //player.Spawn(spawnPos);
+            SpawnPlayer(spawnPos, player);
+        }
+        usedSpawnPositions.Clear();
+        //FreeSpaceAroundPlayers();
+    }
+    //protected void FreeSpaceAroundPlayers()
+    //{
+    //    // make empty space around players
+    //    for (int i = 0; i < players.Count; i++)
+    //    {
+    //        var player = players[i];
+    //        var pos = GetGridPosition(player.Position);
+
+    //        for(int z = -1; z <= 1; z++)
+    //        {
+    //            for(int x = -1; x <= 1; x++)
+    //            {
+    //                Vector3I newPos = pos + new Vector3I(x, 0, z);
+    //                if (IsInnerCell(newPos) && GetObjectInCell(newPos) == GridIndexes.destructibleWall)
+    //                    UpdateMapCell(newPos, GridIndexes.empty);
+    //            }
+    //        }
+    //    }
+    //    //    foreach (Vector3I spawnPos in spawnPositions)
+    //    //{
+    //    //    for (int x = -1; x <= 1; x++)
+    //    //    {
+    //    //        Vector3I newPos = spawnPos + new Vector3I(x, 0, 0);
+    //    //        if (IsInnerCell(newPos))
+    //    //            UpdateMapCell(newPos, GridIndexes.empty);
+    //    //    }
+
+    //    //    for (int z = -1; z <= 1; z += 2)
+    //    //    {
+    //    //        Vector3I newPos = spawnPos + new Vector3I(0, 0, z);
+    //    //        if (IsInnerCell(newPos))
+    //    //            UpdateMapCell(newPos, GridIndexes.empty);
+    //    //    }
+    //    //}
+    //}
+    protected void SpawnPlayer(Vector3I pos, Character player)
+    {
+        for (int z = -1; z <= 1; z++)
         {
             for (int x = -1; x <= 1; x++)
             {
-                Vector3I newPos = spawnPos + new Vector3I(x, 0, 0);
-                if (IsInnerCell(newPos))
-                    UpdateMapCell(newPos, GridIndexes.empty);
-            }
-
-            for (int z = -1; z <= 1; z += 2)
-            {
-                Vector3I newPos = spawnPos + new Vector3I(0, 0, z);
-                if (IsInnerCell(newPos))
+                Vector3I newPos = pos + new Vector3I(x, 0, z);
+                if (IsInnerCell(newPos) && GetObjectInCell(newPos) == GridIndexes.destructibleWall)
                     UpdateMapCell(newPos, GridIndexes.empty);
             }
         }
+
+        player.Spawn(pos);
+        UpdatePlayerCell(pos, player.TeamID);
+        lastPlayerPositions[player.playerIndex] = pos;
     }
     void UpdateMapCell(Vector3I pos, int what)
     {
@@ -1003,6 +1061,14 @@ public partial class GameManager : Node3D
     public virtual void OnPlayerDeath(int playerIndex)
     {
         alivePlayerCount--;
+        var deadPlayer = players[playerIndex];
+        for (int i = 0; i < players.Count; i++)
+        {
+            var player = players[i];
+            if (player.TeamID != deadPlayer.TeamID)
+                player.OnEnemyDeath();
+        }
+
         if (alivePlayerCount <= 1)
         {
             for (int i = 0; i < players.Count; i++)

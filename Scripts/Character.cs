@@ -394,6 +394,7 @@ public partial class Character : CharacterBody3D
     {
         // AddReward(0.01f);
     }
+    public virtual void OnEnemyDeath() { }
     protected virtual void OnBombPlaced(float rating)
     {
 

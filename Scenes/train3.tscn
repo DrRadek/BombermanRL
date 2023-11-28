@@ -1,21 +1,21 @@
-[gd_scene load_steps=6 format=3 uid="uid://co4s6fgqqc0eu"]
+[gd_scene load_steps=7 format=3 uid="uid://co4s6fgqqc0eu"]
 
 [ext_resource type="Script" path="res://Scripts/ModeManager.cs" id="1_ex73d"]
 [ext_resource type="PackedScene" uid="uid://bjgbjnxs817l3" path="res://Scenes/Arenas/BaseGame.tscn" id="2_eo7nv"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="2_krds0"]
 [ext_resource type="PackedScene" uid="uid://bg82kwk31ervq" path="res://Scenes/Arenas/BombDodge.tscn" id="3_pgbmp"]
 [ext_resource type="PackedScene" uid="uid://m1kg1164y5d3" path="res://Scenes/Arenas/StaticEnemies.tscn" id="4_shpct"]
+[ext_resource type="PackedScene" uid="uid://dfwmjcitdu3x4" path="res://Scenes/Arenas/StaticEnemiesPhase2.tscn" id="5_k3r4i"]
 
 [node name="Train" type="Node3D"]
 script = ExtResource("1_ex73d")
-modeIndex = 2
-modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct")]
-instanceCounts = [1, 1, 4]
+modeIndex = 3
+modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i")]
+instanceCounts = [1, 1, 4, 4]
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("2_krds0")
 action_repeat = 4
-speed_up = 4
 onnx_model_path = "res://Learning/model.onnx"
 should_connect_to_server = true
 
