@@ -46,7 +46,7 @@ public partial class Character : CharacterBody3D
     bool isInvulnerable = false;
     double flickerDelta = 0;
     double invulnerabilityTime = 0f;
-    double invulnerabilityTimeDefault = 2f;
+    double invulnerabilityTimeDefault = 1.5f;
 
     // bomb info
     const double bombCooldownAfterSpawn = 0.75f;

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dfwmjcitdu3x4"]
+[gd_scene load_steps=10 format=3 uid="uid://dfwmjcitdu3x4"]
 
 [ext_resource type="Script" path="res://Scripts/Arenas/RandomSpawnArena.cs" id="1_0jjqq"]
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="2_4fm8l"]
@@ -15,12 +15,6 @@ albedo_color = Color(0.607843, 0.709804, 1, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_rbav4"]
 material = SubResource("StandardMaterial3D_bc2ts")
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_agaml"]
-size = Vector3(17, 1, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_tdlyk"]
-size = Vector3(1, 1, 15)
 
 [sub_resource type="Environment" id="Environment_lrv6o"]
 
@@ -39,50 +33,6 @@ shape = SubResource("BoxShape3D_a80ve")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Map/Bottom"]
 transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0)
-mesh = SubResource("BoxMesh_rbav4")
-
-[node name="StaticBody3D2" type="StaticBody3D" parent="Map"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 8)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D2"]
-transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("BoxMesh_rbav4")
-
-[node name="CollisionShape3D2" type="CollisionShape3D" parent="Map/StaticBody3D2"]
-shape = SubResource("BoxShape3D_agaml")
-
-[node name="StaticBody3D3" type="StaticBody3D" parent="Map"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -8)
-visible = false
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D3"]
-shape = SubResource("BoxShape3D_agaml")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D3"]
-transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-mesh = SubResource("BoxMesh_rbav4")
-
-[node name="StaticBody3D4" type="StaticBody3D" parent="Map"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0.5, 0)
-visible = false
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D4"]
-shape = SubResource("BoxShape3D_tdlyk")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0)
-mesh = SubResource("BoxMesh_rbav4")
-
-[node name="StaticBody3D5" type="StaticBody3D" parent="Map"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0.5, 0)
-visible = false
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/StaticBody3D5"]
-shape = SubResource("BoxShape3D_tdlyk")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/StaticBody3D5"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 15, 0, 0, 0)
 mesh = SubResource("BoxMesh_rbav4")
 
 [node name="GridMap" type="GridMap" parent="Map"]

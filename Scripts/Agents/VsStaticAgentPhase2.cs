@@ -15,7 +15,7 @@ public partial class VsStaticAgentPhase2 : Character
     }
     public override void OnTeamHit()
     {
-        AddReward(-0.05f);
+        AddReward(-0.5f);
     }
     public override void OnEnemyTeamHit()
     {
@@ -32,6 +32,12 @@ public partial class VsStaticAgentPhase2 : Character
             AddReward(-1);
             gameManager.ForceEndGame();
         }
+    }
+
+    public override void OnDangerousTileTouched(float strength)
+    {
+        if(strength > 0.5f)
+            AddReward(-strength * 0.0001f);
     }
 
     protected override void OnDeath()

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Threading.Tasks;
 
 public partial class GameManager : Node3D
 {
@@ -18,6 +19,7 @@ public partial class GameManager : Node3D
     public int maxPlayerCount = 4;
 
     bool waitForServer = true;
+    bool playerIsOutOfBounds = false;
 
     const int playerMapObservationsSize = 7;
     const int playerMapObservationsOffset = playerMapObservationsSize / 2;
@@ -484,6 +486,14 @@ public partial class GameManager : Node3D
     }
     public override void _PhysicsProcess(double delta)
     {
+        if (playerIsOutOfBounds)
+        {
+            GD.Print("Player is out of bounds");
+            playerIsOutOfBounds = false;
+            ForceEndGame();
+            return;
+        }
+
         if (waitForServer)
         {
 
@@ -601,6 +611,10 @@ public partial class GameManager : Node3D
         Array.Clear(bombValues, 0, bombValues.Length);
 
         // cleanup
+        for(int i = 0; i < playerMapSensor.Count; i++)
+        {
+            playerMapSensor[i] = 0;
+        }
         Vector3I pos = new Vector3I();
         for (int z = -arenaOffset + 1; z < -arenaOffset + arenaSize - 1; z++)
         {
@@ -810,7 +824,7 @@ public partial class GameManager : Node3D
                     UpdateMapCell(newPos, GridIndexes.empty);
             }
         }
-
+        UpdatePlayerCell(lastPlayerPositions[player.playerIndex], 0);
         player.Spawn(pos);
         UpdatePlayerCell(pos, player.TeamID);
         lastPlayerPositions[player.playerIndex] = pos;
@@ -846,12 +860,12 @@ public partial class GameManager : Node3D
     }
     void UpdatePlayerCell(Vector3I pos, int teamID)
     {
-        pos.Y = 0;
         int index = GetGridIndex(pos);
-        if (index >= playerMapSensor.Count || index < 0)
+        if (pos.Y != 0 || !IsInnerCell(pos) || index >= playerMapSensor.Count || index < 0)
         {
             GD.PrintErr($"Error :: {index}, {pos}");
-            ForceEndGame();
+            playerIsOutOfBounds = true;
+            // ForceEndGame();
         }
         else
         {
