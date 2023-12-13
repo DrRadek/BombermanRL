@@ -21,7 +21,7 @@ public partial class GameManager : Node3D
     bool waitForServer = true;
     bool playerIsOutOfBounds = false;
 
-    const int playerMapObservationsSize = 7;
+    const int playerMapObservationsSize = 11;
     const int playerMapObservationsOffset = playerMapObservationsSize / 2;
     const int enemyMapObservationsSize = 3;
     const int enemyMapObservationsOffset = enemyMapObservationsSize / 2;
@@ -34,7 +34,7 @@ public partial class GameManager : Node3D
     float[] bombValues = new float[arenaSize * arenaSize];
 
     // debug info
-    bool visualizeObs = true;
+    bool visualizeObs = false;
     List<Node3D> obsNodes = new();
     List<List<StandardMaterial3D>> obsNodeMaterials = new();
     double printSpeed = 0.3f;
@@ -119,7 +119,8 @@ public partial class GameManager : Node3D
         currentCellsNew.Clear();
 
         currentCellsOld.Enqueue(startPos);
-        while (currentCellsOld.Count > 0) {
+        while (currentCellsOld.Count > 0)
+        {
             while (currentCellsOld.Count > 0)
             {
                 var pos = currentCellsOld.Dequeue();
@@ -150,7 +151,6 @@ public partial class GameManager : Node3D
                         GD.Print($"index {index} out of range, pos: {newPosRelative}, index: {index} ({nameof(FindNearestSafeCell)})");
                         continue;
                     }
-                    
 
                     if (item == GridIndexes.destructibleWall || item == GridIndexes.indestructibleWall || item2 == gridObsValues[GridIndexes.friendlyPlayer] || item2 == gridObsValues[GridIndexes.enemyPlayer])
                     {
@@ -194,7 +194,7 @@ public partial class GameManager : Node3D
                 }
 
                 int teamID = playerMapSensor[GetGridIndex(newPos)];
-                if(teamID != 0)
+                if (teamID != 0)
                 {
                     if (teamID != playerTeamID)
                         things.Add(GridIndexes.enemyPlayer);
@@ -393,7 +393,7 @@ public partial class GameManager : Node3D
         position.Y = 0;
         return gridmap.GetCellItem(GetGridPosition(position));
     }
-    
+
     public override void _Ready()
     {
         if (visualizeObs)
@@ -611,7 +611,7 @@ public partial class GameManager : Node3D
         Array.Clear(bombValues, 0, bombValues.Length);
 
         // cleanup
-        for(int i = 0; i < playerMapSensor.Count; i++)
+        for (int i = 0; i < playerMapSensor.Count; i++)
         {
             playerMapSensor[i] = 0;
         }
@@ -696,7 +696,8 @@ public partial class GameManager : Node3D
         // is something in bomb radius? yes -> +0.4 if there is a player, +0.2 if there is a destructible wall
         var things = GetThingsInBombRadius(pos, players[sourcePlayerIndex].BombStrength, sourcePlayerTeamID);
         float bestRating = 0;
-        foreach (var thing in things){
+        foreach (var thing in things)
+        {
             switch (thing)
             {
                 case GridIndexes.enemyPlayer:
@@ -706,7 +707,7 @@ public partial class GameManager : Node3D
                     bestRating = Math.Max(0.2f, bestRating);
                     break;
             }
-            
+
         }
         rating += bestRating;
         return rating;
@@ -815,6 +816,7 @@ public partial class GameManager : Node3D
     //}
     protected void SpawnPlayer(Vector3I pos, Character player)
     {
+        pos.Y = 0;
         for (int z = -1; z <= 1; z++)
         {
             for (int x = -1; x <= 1; x++)
@@ -824,9 +826,11 @@ public partial class GameManager : Node3D
                     UpdateMapCell(newPos, GridIndexes.empty);
             }
         }
-        UpdatePlayerCell(lastPlayerPositions[player.playerIndex], 0);
-        player.Spawn(pos);
+        //UpdatePlayerCell(lastPlayerPositions[player.playerIndex], 0);
+        //GD.Print($"pos: {pos}, index: {player.playerIndex	}");
         UpdatePlayerCell(pos, player.TeamID);
+        player.Spawn(pos);
+        //GD.Print($": {playerMapSensor[GetGridIndex(pos)]}");
         lastPlayerPositions[player.playerIndex] = pos;
     }
     void UpdateMapCell(Vector3I pos, int what)

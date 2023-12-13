@@ -15,11 +15,11 @@ public partial class ModeManager : Node
     Godot.Collections.Array<int> instanceCounts = new();
 
     public override void _Ready()
-	{
-        if(!useGlobalCamera)
+    {
+        if (!useGlobalCamera)
             GetNode("Camera3D").QueueFree();
 
-        for(int i = 0; i < instanceCounts[modeIndex]; i++)
+        for (int i = 0; i < instanceCounts[modeIndex]; i++)
         {
             Node3D scene = (Node3D)modeScenes[modeIndex].Instantiate();
             scene.Position = new Vector3(i * 20, 0, 0);

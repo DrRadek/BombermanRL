@@ -10,12 +10,12 @@ public partial class VsStaticAgentPhase2 : Character
     }
     protected override void OnBombPlaced(float rating)
     {
-        if(rating > 0)
+        if (rating > 0)
             AddReward(0.001f * rating);
     }
     public override void OnTeamHit()
     {
-        AddReward(-0.5f);
+        AddReward(-1f);
     }
     public override void OnEnemyTeamHit()
     {
@@ -27,16 +27,26 @@ public partial class VsStaticAgentPhase2 : Character
     }
     public override void OnNormalTileTouched()
     {
-        if (TimeWithoutUsingBomb > 30)
+        if (TimeWithoutUsingBomb > MaxTimeWithoutUsingBomb)
         {
+            HandleFireHit(true);
             AddReward(-1);
-            gameManager.ForceEndGame();
+            PlaceBomb();
         }
+        //else if(TimeWithoutUsingBomb > 15)
+        //{
+        //    AddReward(-(float)((TimeWithoutUsingBomb - 15) / (MaxTimeWithoutUsingBomb - 15)) * 0.0001f);
+        //}
+    }
+
+    public override void OnWallDestroyed()
+    {
+        AddReward(0.01f);
     }
 
     public override void OnDangerousTileTouched(float strength)
     {
-        if(strength > 0.5f)
+        if (strength > 0.5f)
             AddReward(-strength * 0.0001f);
     }
 

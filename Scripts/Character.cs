@@ -57,6 +57,7 @@ public partial class Character : CharacterBody3D
     double maxBombCooldown = Mathf.Max(bombCooldownAfterUse, bombCooldownAfterSpawn);
     double bombDelta = bombCooldownAfterSpawn;
     double timeWithoutUsingBomb = 0;
+    double maxTimeWithoutUsingBomb = 30;
 
     public int Lives { get => lives; private set => lives = value; }
     public double InvulnerabilityTime { get => invulnerabilityTime; set => invulnerabilityTime = value; }
@@ -71,6 +72,7 @@ public partial class Character : CharacterBody3D
     private bool IsInvulnerable { get => isInvulnerable; set => isInvulnerable = value; }
     private int MaxSpawnedBombs { get => maxSpawnedBombs; set => maxSpawnedBombs = value; }
     protected double TimeWithoutUsingBomb { get => timeWithoutUsingBomb; private set => timeWithoutUsingBomb = value; }
+    protected double MaxTimeWithoutUsingBomb { get => maxTimeWithoutUsingBomb; set => maxTimeWithoutUsingBomb = value; }
     public int DefaultMaxLives { get => defaultMaxLives;protected set => defaultMaxLives = value; }
 
     Vector3 GetLocalPlayerPos()
@@ -84,7 +86,7 @@ public partial class Character : CharacterBody3D
     public Godot.Collections.Array<float> GetObs()
     {
         Godot.Collections.Array<float> obs = new();
-        obs.Resize(7);
+        obs.Resize(8);
         if (!IsDead)
         {
             Vector3 pos = GetLocalPlayerPos();
@@ -95,6 +97,7 @@ public partial class Character : CharacterBody3D
             obs[4] = GetNormalizedLives();
             obs[5] = (float)(invulnerabilityTime / invulnerabilityTimeDefault);
             obs[6] = (spawnedBombs == maxSpawnedBombs) ? (float)maxBombCooldown : (float)(bombDelta / maxBombCooldown);
+            obs[7] = (float)(timeWithoutUsingBomb / maxTimeWithoutUsingBomb);
         }
         else
         {
@@ -183,24 +186,7 @@ public partial class Character : CharacterBody3D
 
         if (bombInput)
         {
-            timeWithoutUsingBomb = 0;
-            if (isInvulnerable || spawnedBombs >= maxSpawnedBombs || bombDelta > 0)
-            {
-                OnBombFailedToPlace();
-            }
-            else
-            {
-                if (!gameManager.PlaceBomb(Position, playerIndex, out float rating))
-                {
-                    OnBombFailedToPlace();
-                }
-                else
-                {
-                    OnBombPlaced(rating);
-                    bombDelta = bombCooldownAfterUse;
-                    spawnedBombs++;
-                }
-            }
+            PlaceBomb();
         }
         else
         {
@@ -346,7 +332,29 @@ public partial class Character : CharacterBody3D
         }
 
     }
-    void HandleFireHit()
+    protected void PlaceBomb()
+    {
+        timeWithoutUsingBomb = 0;
+        if (isInvulnerable || spawnedBombs >= maxSpawnedBombs || bombDelta > 0)
+        {
+            OnBombFailedToPlace();
+        }
+        else
+        {
+            if (!gameManager.PlaceBomb(Position, playerIndex, out float rating))
+            {
+                OnBombFailedToPlace();
+            }
+            else
+            {
+                OnBombPlaced(rating);
+                bombDelta = bombCooldownAfterUse;
+                spawnedBombs++;
+            }
+        }
+
+    }
+    protected void HandleFireHit(bool isForcedHit = false)
     {
         if (!isInvulnerable)
         {
@@ -365,7 +373,8 @@ public partial class Character : CharacterBody3D
                 gameManager.OnPlayerDeath(playerIndex);
             }
 
-            gameManager.OnPlayerHit(teamID, Position);
+            if(!isForcedHit)
+                gameManager.OnPlayerHit(teamID, Position);
         }
 
     }
