@@ -17,8 +17,8 @@ mono_crash.*.json
 # vs ignores
 .vs/
 
-# Learning ignores
-Learning/logs/
+# Other ignores
+Learning
 Export/*
 !Export/Linux
 !Export/Linux/*
