@@ -22,9 +22,8 @@ size = Vector3(1, 1, 15)
 
 [sub_resource type="Environment" id="Environment_lrv6o"]
 
-[node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
+[node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
 script = ExtResource("1_mir2y")
-gridmap = NodePath("Map/GridMap")
 players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
 
 [node name="Map" type="Node3D" parent="."]

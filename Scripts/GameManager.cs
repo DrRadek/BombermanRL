@@ -4,10 +4,9 @@ using System.Collections.Generic;
 using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Threading.Tasks;
-
+// TODO: Convert other arenas to the new map node
 public partial class GameManager : Node3D
 {
-    [Export]
     GridMap gridmap;
 
     //[Export]
@@ -29,12 +28,14 @@ public partial class GameManager : Node3D
     const int arenaOffset = (arenaSize / 2);
     const int cornerOffset = arenaOffset - 1;
 
-    const float bombDetonationSpeed = 2.5f * 0.5f;
+    public const float bombDetonationSpeed = 2.5f * 0.5f;
     const float fireDuration = 1.5f * 0.5f;
     float[] bombValues = new float[arenaSize * arenaSize];
 
     // debug info
     bool visualizeObs = false;
+    public bool VisualizeObs { get => visualizeObs; }
+    int playerIndexToVisualize = 1;
     List<Node3D> obsNodes = new();
     List<List<StandardMaterial3D>> obsNodeMaterials = new();
     double printSpeed = 0.3f;
@@ -61,7 +62,7 @@ public partial class GameManager : Node3D
         new Vector3I(cornerOffset, 0, cornerOffset),
     };
 
-    Vector3I[] directions = {
+    public static Vector3I[] directions = {
         new Vector3I(1,0,0),
         new Vector3I(-1,0,0),
         new Vector3I(0,0,1),
@@ -110,22 +111,37 @@ public partial class GameManager : Node3D
     }
 
     HashSet<Vector3I> cellDistances = new();
-    Queue<Vector3I> currentCellsOld = new();
-    Queue<Vector3I> currentCellsNew = new();
-    Vector3I? FindNearestSafeCell(Vector3I startPos, int playerIndex)
+    Queue<KeyValuePair<int,Vector3I>> currentCellsOld = new();
+    Queue<KeyValuePair<int, Vector3I>> currentCellsNew = new();
+    public Vector3I? FindDirectionToNearestSafeCell(Vector3I startPos, int playerIndex, out Vector3I? nearestSafeCell, float lowestDetonationTime = bombDetonationSpeed * 0.2f)
     {
+
         cellDistances.Clear();
         currentCellsOld.Clear();
         currentCellsNew.Clear();
 
-        currentCellsOld.Enqueue(startPos);
+        currentCellsOld.Enqueue(new (-1, startPos));
+
+        int distance = 0;
         while (currentCellsOld.Count > 0)
         {
+            distance++;
             while (currentCellsOld.Count > 0)
             {
-                var pos = currentCellsOld.Dequeue();
+                KeyValuePair<int, Vector3I> pair = currentCellsOld.Dequeue();
+                var pos = pair.Value;
+                var moveDirection = pair.Key;
+                int moveDirectionIndex = -1;
+                bool setDirections = false;
+
+                if (moveDirection == -1)
+                {
+                    setDirections = true;
+                }
+
                 foreach (Vector3I direction in directions)
                 {
+                    moveDirectionIndex++;
                     Vector3I newPos = pos + direction;
 
                     if (cellDistances.Contains(newPos) || !IsInnerCell(newPos))
@@ -134,46 +150,74 @@ public partial class GameManager : Node3D
                     }
 
                     Vector3I newPosRelative = newPos - startPos;
-                    if (Math.Abs(newPosRelative.X) > playerMapObservationsOffset || Math.Abs(newPosRelative.Y) > playerMapObservationsOffset)
+                    if (Math.Abs(newPosRelative.X) > playerMapObservationsOffset || Math.Abs(newPosRelative.Z) > playerMapObservationsOffset)
                         continue;
-                    newPosRelative += new Vector3I(playerMapObservationsOffset, 0, playerMapObservationsOffset);
-                    int index = newPosRelative.X + newPosRelative.Z * playerMapObservationsSize;
+                    //newPosRelative += new Vector3I(playerMapObservationsOffset, 0, playerMapObservationsOffset);
+                    //int index = newPosRelative.X + newPosRelative.Z * playerMapObservationsSize;
+                    int index = GetGridIndex(newPos);
+                    //int teamID = playerMapSensor[index];
+                    //if (teamID != 0)
+                    //{
+                    //    if (teamID == sourcePlayerTeamID)
+                    //        mapObservations[obsIndex] = gridObsValues[GridIndexes.friendlyPlayer];
+                    //    else
+                    //        mapObservations[obsIndex] = gridObsValues[GridIndexes.enemyPlayer];
+                    //}
+
 
                     int item = GetObjectInCell(newPos);
-                    int item2 = GridIndexes.empty;
+                    int gridTeamID = GridIndexes.empty;
                     try
                     {
                         //GD.Print($"{playerIndex}, {index}");
-                        item2 = playerMapObservations[playerIndex][index];
+                        gridTeamID = playerMapSensor[index]; //playerMapObservations[playerIndex][index];
                     }
                     catch (Exception)
                     {
-                        GD.Print($"index {index} out of range, pos: {newPosRelative}, index: {index} ({nameof(FindNearestSafeCell)})");
+                        GD.Print($"index {index} out of range, relative pos: {newPosRelative}, index: {index} ({nameof(FindDirectionToNearestSafeCell)})");
                         continue;
                     }
 
-                    if (item == GridIndexes.destructibleWall || item == GridIndexes.indestructibleWall || item2 == gridObsValues[GridIndexes.friendlyPlayer] || item2 == gridObsValues[GridIndexes.enemyPlayer])
+                    if (item == GridIndexes.destructibleWall || item == GridIndexes.indestructibleWall || item == GridIndexes.fire || gridTeamID != 0) // || gridTeamID == gridObsValues[GridIndexes.enemyPlayer] || gridTeamID == gridObsValues[GridIndexes.friendlyPlayer])
                     {
                         continue;
                     }
 
-                    if (playerBombObservations[playerIndex][index] > 0)
+                    var bombValue = GetBombValue(index);
+                    //if (bombValue > 0 && bombValue <= lowestDetonationTime && distance <= 2)
+                    //    continue;
+
+                    if (setDirections)
                     {
-                        currentCellsNew.Enqueue(newPos);
+                        moveDirection = moveDirectionIndex;
+                    }
+
+                    //if (playerBombObservations[playerIndex][index] > 0)
+                    if(bombValue > 0)
+                    {
+                        currentCellsNew.Enqueue(new (moveDirection ,newPos));
                         cellDistances.Add(newPos);
                     }
                     else
                     {
-                        return newPos;
+                        nearestSafeCell = newPos;
+                        return startPos + directions[moveDirection];
+                        //return newPos;
                     }
                 }
             }
 
             (currentCellsOld, currentCellsNew) = (currentCellsNew, currentCellsOld);
         }
+        nearestSafeCell = null;
         return null;
     }
-    List<int> GetThingsInBombRadius(Vector3I pos, int bombStrength, int playerTeamID)
+    public float GetBombValue(int index)
+    {
+        return bombValues[index];
+    }
+
+    public List<int> GetThingsInBombRadius(Vector3I pos, int bombStrength, int playerTeamID)
     {
         List<int> things = new();
 
@@ -311,6 +355,7 @@ public partial class GameManager : Node3D
                 }
                 else
                 {
+                    targetPlayer.CheckTimeWithoutUsingBomb();
                     targetPlayer.OnNormalTileTouched();
                 }
             }
@@ -334,8 +379,10 @@ public partial class GameManager : Node3D
             //    GD.Print(msg);
             //}
 
-            if (visualizeObs && sourcePlayerIndex == 0)
+            if (visualizeObs && sourcePlayerIndex == playerIndexToVisualize)
             {
+                Vector3I? nearestSafeCell;
+                var safeCellDirection = FindDirectionToNearestSafeCell(GetGridPosition(sourcePlayer.Position), 0, out nearestSafeCell);
                 obsNodes[targetPlayer.playerIndex].Position = GetGridPosition(targetPlayer.Position);
                 obsIndex = 0;
                 for (int y = -obsOffset; y <= obsOffset; y++)
@@ -347,6 +394,22 @@ public partial class GameManager : Node3D
                         var material = (StandardMaterial3D)obsNodeMaterials[targetPlayer.playerIndex][obsIndex];
                         material.AlbedoColor = new Color(obs2, obs1, 0, 0.8f);
 
+                        Vector3I gridPos = pos + new Vector3I(x, 0, y);
+                        if (gridPos == nearestSafeCell && gridPos == safeCellDirection)
+                        {
+                            material.AlbedoColor = new Color(1, 1, 0, 0.8f);
+                        }
+                        else
+                        {
+                            if (gridPos == nearestSafeCell)
+                            {
+                                material.AlbedoColor = new Color(0, 0, 1, 0.8f);
+                            }
+                            if (gridPos == safeCellDirection)
+                            {
+                                material.AlbedoColor = new Color(1, 0, 1, 0.8f);
+                            }
+                        }
                         obsIndex++;
                     }
                 }
@@ -361,7 +424,7 @@ public partial class GameManager : Node3D
 
         return dict;
     }
-    int GetGridIndex(Vector3I pos)
+    public int GetGridIndex(Vector3I pos)
     {
         return (pos.Z + arenaOffset) * arenaSize + pos.X + arenaOffset;
     }
@@ -396,46 +459,65 @@ public partial class GameManager : Node3D
 
     public override void _Ready()
     {
+        gridmap = GetNode<GridMap>("Map/GridMap");
         if (visualizeObs)
         {
-            obsNodeMaterials.Add(new());
+            //obsNodeMaterials.Add(new());
 
             var scene = GD.Load<PackedScene>("res://Scenes//ObsTile.tscn");
 
-            var obsNode = GetNode<Node3D>("Obs");
+            var obsNode = GetNode<Node3D>("Map/Obs");
 
-            obsNodes.Add(new Node3D());
-            obsNode.AddChild(obsNodes[0]);
+            //obsNodes.Add(new Node3D());
+            //obsNode.AddChild(obsNodes[0]);
 
-            for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
-            {
-                for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
-                {
-                    MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
-                    instance.Position = new Vector3(x, 1.02f, y);
+            //for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
+            //{
+            //    for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
+            //    {
+            //        MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
+            //        instance.Position = new Vector3(x, 1.02f, y);
 
-                    instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
-                    obsNodes[0].AddChild(instance);
-                    obsNodeMaterials[0].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
-                }
-            }
+            //        instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
+            //        obsNodes[0].AddChild(instance);
+            //       obsNodeMaterials[0].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+            //    }
+            //}
 
-            for (int i = 1; i < players.Count; i++)
+            for (int i = 0; i < players.Count; i++)
             {
                 obsNodes.Add(new Node3D());
                 obsNode.AddChild(obsNodes[i]);
 
                 obsNodeMaterials.Add(new());
-                for (int y = -enemyMapObservationsOffset; y <= enemyMapObservationsOffset; y++)
+                if(i == playerIndexToVisualize)
                 {
-                    for (int x = -enemyMapObservationsOffset; x <= enemyMapObservationsOffset; x++)
+                    for (int y = -playerMapObservationsOffset; y <= playerMapObservationsOffset; y++)
                     {
-                        MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
-                        instance.Position = new Vector3(x, 1.01f, y);
+                        for (int x = -playerMapObservationsOffset; x <= playerMapObservationsOffset; x++)
+                        {
+                            MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
+                            instance.Position = new Vector3(x, 1.01f, y);
 
-                        instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
-                        obsNodes[i].AddChild(instance);
-                        obsNodeMaterials[i].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+                            instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
+                            obsNodes[i].AddChild(instance);
+                            obsNodeMaterials[i].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+                        }
+                    }
+                }
+                else
+                {
+                    for (int y = -enemyMapObservationsOffset; y <= enemyMapObservationsOffset; y++)
+                    {
+                        for (int x = -enemyMapObservationsOffset; x <= enemyMapObservationsOffset; x++)
+                        {
+                            MeshInstance3D instance = (MeshInstance3D)scene.Instantiate();
+                            instance.Position = new Vector3(x, 1.01f, y);
+
+                            instance.MaterialOverride = (StandardMaterial3D)instance.GetActiveMaterial(0).Duplicate();
+                            obsNodes[i].AddChild(instance);
+                            obsNodeMaterials[i].Add((StandardMaterial3D)instance.GetActiveMaterial(0));
+                        }
                     }
                 }
             }
@@ -659,7 +741,7 @@ public partial class GameManager : Node3D
         float rating = 0;
         // can player get out of the situation? no -> -1, return
 
-        // TODO: find the issue with this method
+        // The agent will figure this out on their own. TODO: remove?
         //if(FindNearestSafeCell(pos, sourcePlayerIndex) == null)
         //{
         //    return -1;

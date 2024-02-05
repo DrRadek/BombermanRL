@@ -31,6 +31,10 @@ func get_obs() -> Dictionary:
 		if i == id:
 			continue
 			
+		#if i >= len(game_manager.players):
+		#	# TODO: add zeros for non existing players
+		#	continue
+			
 		var player_i = game_manager.players[i]
 		players.append_array(_player.GetEnemyObs(player_i))
 

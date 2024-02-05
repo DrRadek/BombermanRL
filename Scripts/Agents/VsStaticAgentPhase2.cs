@@ -5,8 +5,8 @@ public partial class VsStaticAgentPhase2 : Character
 {
     protected override void OnDefaultValuesSet()
     {
-        DefaultMaxSpawnedBombs = 2;
-        DefaultMaxLives = 3;
+        //DefaultMaxSpawnedBombs = 2;
+        //DefaultMaxLives = 3;
     }
     protected override void OnBombPlaced(float rating)
     {
@@ -25,20 +25,24 @@ public partial class VsStaticAgentPhase2 : Character
     {
         AddReward(3);
     }
-    public override void OnNormalTileTouched()
+    //public override void OnNormalTileTouched()
+    //{
+    //    if (TimeWithoutUsingBomb > MaxTimeWithoutUsingBomb)
+    //    {
+    //        HandleFireHit(true);
+    //        AddReward(-1);
+    //        PlaceBomb(); // Bomb won't be placed due to a player taking a hit, but will reset the timer,
+    //                     // preventing a player from taking multiple hits
+    //    }
+    //    //else if(TimeWithoutUsingBomb > 15)
+    //    //{
+    //    //    AddReward(-(float)((TimeWithoutUsingBomb - 15) / (MaxTimeWithoutUsingBomb - 15)) * 0.0001f);
+    //    //}
+    //}
+    protected override void OnForgotToUseBomb()
     {
-        if (TimeWithoutUsingBomb > MaxTimeWithoutUsingBomb)
-        {
-            HandleFireHit(true);
-            AddReward(-1);
-            PlaceBomb();
-        }
-        //else if(TimeWithoutUsingBomb > 15)
-        //{
-        //    AddReward(-(float)((TimeWithoutUsingBomb - 15) / (MaxTimeWithoutUsingBomb - 15)) * 0.0001f);
-        //}
+        AddReward(-1);
     }
-
     public override void OnWallDestroyed()
     {
         AddReward(0.01f);

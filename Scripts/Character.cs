@@ -21,6 +21,9 @@ public partial class Character : CharacterBody3D
     [Export]
     bool isPlayer = false;
 
+    [Export]
+    Color color = new(1,1,1);
+
     public int playerIndex;
 
     protected GameManager gameManager;
@@ -34,7 +37,7 @@ public partial class Character : CharacterBody3D
     bool isHuman = false;
     bool waitAfterSpawn = true;
 
-    int defaultMaxSpawnedBombs = 3;
+    int defaultMaxSpawnedBombs = 2;
     int defaultBombStrength = 3;
 
     int defaultMaxLives = 3;
@@ -158,7 +161,6 @@ public partial class Character : CharacterBody3D
         aiController?.Call(aiMethodName.init, this);
 
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
-
     }
     public override void _PhysicsProcess(double delta)
     {
@@ -177,11 +179,20 @@ public partial class Character : CharacterBody3D
                 bombInput = (int)aiController.Get(aiPropertyName.placeBomb) == 1;
                 inputDir = new Vector2((float)aiController.Get(aiPropertyName.moveX), (float)aiController.Get(aiPropertyName.moveY));
             }
-            else if (isPlayer || (isHuman))
+            else
             {
-                bombInput = Input.IsActionJustPressed("PlaceBomb");
-                inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
+                //bombInput = Input.IsActionJustPressed("PlaceBomb");
+                //inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
+                GetHumanInput(out inputDir, out bombInput);
             }
+        }
+        else if(isPlayer)
+        {
+            GetHumanInput(out inputDir, out bombInput);
+        }
+        else
+        {
+            GetInput(out inputDir, out bombInput);
         }
 
         if (bombInput)
@@ -299,6 +310,8 @@ public partial class Character : CharacterBody3D
 
         lastLowestDistanceFromEnemies = float.MaxValue;
         lowestDistanceFromEnemies = float.MaxValue;
+
+        material.AlbedoColor = color;
     }
     public void Despawn()
     {
@@ -379,6 +392,17 @@ public partial class Character : CharacterBody3D
 
     }
 
+    public void CheckTimeWithoutUsingBomb()
+    {
+        if (TimeWithoutUsingBomb > MaxTimeWithoutUsingBomb)
+        {
+            HandleFireHit(true);
+            PlaceBomb(); // Bomb won't be placed due to a player taking a hit, but will reset the timer,
+                         // preventing a player from taking multiple hits
+            OnForgotToUseBomb();
+        }
+    }
+
     public virtual void OnTeamHit()
     {
         // AddReward(-0.01f);
@@ -404,6 +428,10 @@ public partial class Character : CharacterBody3D
         // AddReward(0.01f);
     }
     public virtual void OnEnemyDeath() { }
+    protected virtual void OnForgotToUseBomb()
+    {
+        
+    }
     protected virtual void OnBombPlaced(float rating)
     {
 
@@ -427,6 +455,17 @@ public partial class Character : CharacterBody3D
     protected virtual void OnDeath()
     {
 
+    }
+    protected virtual void GetInput(out Vector2 inputDir, out bool bombInput)
+    {
+        //GetHumanInput(out inputDir, out bombInput);
+        inputDir = Vector2.Zero;
+        bombInput = false;
+    }
+    private void GetHumanInput(out Vector2 inputDir, out bool bombInput)
+    {
+        bombInput = Input.IsActionJustPressed("PlaceBomb");
+        inputDir = Input.GetVector("LEFT", "RIGHT", "UP", "DOWN");
     }
 }
 

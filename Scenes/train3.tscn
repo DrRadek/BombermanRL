@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://co4s6fgqqc0eu"]
+[gd_scene load_steps=10 format=3 uid="uid://co4s6fgqqc0eu"]
 
 [ext_resource type="Script" path="res://Scripts/ModeManager.cs" id="1_ex73d"]
 [ext_resource type="PackedScene" uid="uid://bjgbjnxs817l3" path="res://Scenes/Arenas/BaseGame.tscn" id="2_eo7nv"]
@@ -6,18 +6,29 @@
 [ext_resource type="PackedScene" uid="uid://bg82kwk31ervq" path="res://Scenes/Arenas/BombDodge.tscn" id="3_pgbmp"]
 [ext_resource type="PackedScene" uid="uid://m1kg1164y5d3" path="res://Scenes/Arenas/StaticEnemies.tscn" id="4_shpct"]
 [ext_resource type="PackedScene" uid="uid://dfwmjcitdu3x4" path="res://Scenes/Arenas/StaticEnemiesPhase2.tscn" id="5_k3r4i"]
+[ext_resource type="PackedScene" uid="uid://cg2xti4w2rhen" path="res://Scenes/Arenas/DecisionTreeVsPlayer.tscn" id="6_qjvk5"]
+[ext_resource type="PackedScene" uid="uid://be2h88d8vntlv" path="res://Scenes/Arenas/ReinforcementVsDecisionTree2v2.tscn" id="7_2v5cg"]
+
+[sub_resource type="Environment" id="Environment_rpycj"]
 
 [node name="Train" type="Node3D"]
 script = ExtResource("1_ex73d")
 modeIndex = 3
-modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i")]
-instanceCounts = [1, 1, 4, 4]
+modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i"), ExtResource("6_qjvk5"), ExtResource("7_2v5cg")]
+instanceCounts = [1, 1, 4, 4, 1, 4]
 
 [node name="Sync" type="Node" parent="."]
 script = ExtResource("2_krds0")
 action_repeat = 4
-speed_up = 4
 onnx_model_path = "res://Learning/model.onnx"
+should_connect_to_server = true
+game_has_AI = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 27.307, 22.806, 18.883)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.258819, 0.965926, 0, -0.965926, 0.258819, 0, 12, 0)
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_rpycj")

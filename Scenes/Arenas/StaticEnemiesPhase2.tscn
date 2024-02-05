@@ -1,63 +1,20 @@
-[gd_scene load_steps=10 format=3 uid="uid://dfwmjcitdu3x4"]
+[gd_scene load_steps=6 format=3 uid="uid://dfwmjcitdu3x4"]
 
 [ext_resource type="Script" path="res://Scripts/Arenas/RandomSpawnArena.cs" id="1_0jjqq"]
-[ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="2_4fm8l"]
+[ext_resource type="PackedScene" uid="uid://b6nsbpapixaia" path="res://Scenes/map.tscn" id="2_mlorp"]
 [ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_qaysr"]
 [ext_resource type="Script" path="res://Scripts/Agents/VsStaticAgentPhase2.cs" id="4_6unm7"]
 [ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="5_2nhee"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
-size = Vector3(17, 1, 17)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bc2ts"]
-vertex_color_use_as_albedo = true
-albedo_color = Color(0.607843, 0.709804, 1, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_rbav4"]
-material = SubResource("StandardMaterial3D_bc2ts")
-
-[sub_resource type="Environment" id="Environment_lrv6o"]
-
-[node name="Game" type="Node3D" node_paths=PackedStringArray("gridmap", "players")]
+[node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
 script = ExtResource("1_0jjqq")
-gridmap = NodePath("Map/GridMap")
 players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
 
-[node name="Map" type="Node3D" parent="."]
-
-[node name="Bottom" type="StaticBody3D" parent="Map"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Map/Bottom"]
-shape = SubResource("BoxShape3D_a80ve")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="Map/Bottom"]
-transform = Transform3D(17, 0, 0, 0, 1, 0, 0, 0, 17, 0, 0, 0)
-mesh = SubResource("BoxMesh_rbav4")
-
-[node name="GridMap" type="GridMap" parent="Map"]
-mesh_library = ExtResource("2_4fm8l")
-cell_size = Vector3(1, 1, 1)
-cell_center_x = false
-cell_center_z = false
-data = {
-"cells": PackedInt32Array(2, 4, 655363, 2, 3, 655364, 2, 2, 524289, 2, 5, 655362, 2, 1, 655360)
-}
-metadata/_editor_floor_ = Vector3(0, 0, 0)
-
-[node name="Camera3D" type="Camera3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.139173, 0.990268, 0, -0.990268, 0.139173, 0, 11.5, 2.15)
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, -0.258819, 0.965926, 0, -0.965926, -0.258819, 0, 0, 0)
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_lrv6o")
-
-[node name="Obs" type="Node3D" parent="."]
+[node name="Map" parent="." instance=ExtResource("2_mlorp")]
 
 [node name="Character" parent="." instance=ExtResource("3_qaysr")]
 script = ExtResource("4_6unm7")
+color = Color(0, 0, 1, 1)
 
 [node name="Character2" parent="." instance=ExtResource("5_2nhee")]
 teamID = 2
