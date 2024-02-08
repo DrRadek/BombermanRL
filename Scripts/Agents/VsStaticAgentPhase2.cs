@@ -57,6 +57,6 @@ public partial class VsStaticAgentPhase2 : Character
     protected override void OnDeath()
     {
         AddReward(-0.5f);
-        gameManager.ForceEndGame();
+        gameManager.RestartGame();
     }
 }

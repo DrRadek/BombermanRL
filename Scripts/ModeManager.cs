@@ -5,6 +5,8 @@ public partial class ModeManager : Node
 {
     [Export] bool useGlobalCamera = true;
 
+    [Export] bool resetWhenRlAgentsDie = true;
+
     [Export]
     int modeIndex = 0;
 
@@ -21,9 +23,10 @@ public partial class ModeManager : Node
 
         for (int i = 0; i < instanceCounts[modeIndex]; i++)
         {
-            Node3D scene = (Node3D)modeScenes[modeIndex].Instantiate();
+            GameManager scene = (GameManager)modeScenes[modeIndex].Instantiate();
             scene.Position = new Vector3(i * 20, 0, 0);
             AddChild(scene);
+            scene.ResetWhenRlAgentsDie = resetWhenRlAgentsDie;
         }
     }
 }

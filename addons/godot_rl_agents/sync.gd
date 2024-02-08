@@ -5,7 +5,8 @@ extends Node
 @export var onnx_model_path := ""
 @export var should_use_model : bool
 @export var should_connect_to_server : bool
-@export var game_has_AI : bool
+
+var game_has_rl_agents : bool = true
 
 @onready var start_time = Time.get_ticks_msec()
 
@@ -31,11 +32,6 @@ var _obs_space : Dictionary
 # Called when the node enters the scene tree for the first time.
 
 func _ready():
-	if not game_has_AI:
-		Engine.physics_ticks_per_second = speed_up * 60 # Replace with function body.
-		Engine.time_scale = speed_up * 1.0
-		return
-		
 	await get_tree().root.ready
 	get_tree().set_pause(true) 
 	_initialize()
@@ -44,6 +40,12 @@ func _ready():
 	
 func _initialize():
 	_get_agents()
+	if len(agents) == 0:
+		game_has_rl_agents = false
+		Engine.physics_ticks_per_second = speed_up * 60 # Replace with function body.
+		Engine.time_scale = speed_up * 1.0
+		return
+		
 	_obs_space = agents[0].get_obs_space()
 	_action_space = agents[0].get_action_space()
 	args = _get_args()
@@ -74,7 +76,7 @@ func _initialize():
 	initialized = true  
 
 func _physics_process(delta):
-	if not game_has_AI:
+	if not game_has_rl_agents:
 		return
 		
 	# two modes, human control, agent control

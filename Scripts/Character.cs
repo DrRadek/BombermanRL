@@ -34,6 +34,7 @@ public partial class Character : CharacterBody3D
     // character speed
     const float speed = 4.0f * 2f;
 
+    bool isRlAgent;
     bool isHuman = false;
     bool waitAfterSpawn = true;
 
@@ -77,6 +78,7 @@ public partial class Character : CharacterBody3D
     protected double TimeWithoutUsingBomb { get => timeWithoutUsingBomb; private set => timeWithoutUsingBomb = value; }
     protected double MaxTimeWithoutUsingBomb { get => maxTimeWithoutUsingBomb; set => maxTimeWithoutUsingBomb = value; }
     public int DefaultMaxLives { get => defaultMaxLives;protected set => defaultMaxLives = value; }
+    public bool IsRlAgent { get => isRlAgent; }
 
     Vector3 GetLocalPlayerPos()
     {
@@ -161,6 +163,7 @@ public partial class Character : CharacterBody3D
         aiController?.Call(aiMethodName.init, this);
 
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
+        isRlAgent = IsPlayerRLAgent();
     }
     public override void _PhysicsProcess(double delta)
     {
@@ -390,6 +393,10 @@ public partial class Character : CharacterBody3D
                 gameManager.OnPlayerHit(teamID, Position);
         }
 
+    }
+    private bool IsPlayerRLAgent()
+    {
+        return aiController?.IsInGroup("AGENT") ?? false;
     }
 
     public void CheckTimeWithoutUsingBomb()

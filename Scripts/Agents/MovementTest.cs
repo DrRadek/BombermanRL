@@ -17,7 +17,7 @@ public partial class MovementTest : Character
         if (timeSinceLastPickup >= 5)
         {
             //AddReward(-1);
-            gameManager.ForceEndGame();
+            gameManager.RestartGame();
         }
         //else if (timeSinceLastPickup >= 2f)
         //{
@@ -56,7 +56,7 @@ public partial class MovementTest : Character
             //AddReward(100);
             collected = 0;
             //Despawn();
-            gameManager.ForceEndGame();
+            gameManager.RestartGame();
         }
     }
 }

@@ -13,7 +13,7 @@
 
 [node name="Train" type="Node3D"]
 script = ExtResource("1_ex73d")
-modeIndex = 3
+modeIndex = 5
 modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i"), ExtResource("6_qjvk5"), ExtResource("7_2v5cg")]
 instanceCounts = [1, 1, 4, 4, 1, 4]
 
@@ -22,7 +22,6 @@ script = ExtResource("2_krds0")
 action_repeat = 4
 onnx_model_path = "res://Learning/model.onnx"
 should_connect_to_server = true
-game_has_AI = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 27.307, 22.806, 18.883)

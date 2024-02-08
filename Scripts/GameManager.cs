@@ -19,6 +19,8 @@ public partial class GameManager : Node3D
 
     bool waitForServer = true;
     bool playerIsOutOfBounds = false;
+    bool resetWhenRLAgentsDie = false;
+    bool gameHasRlAgents = false;
 
     const int playerMapObservationsSize = 11;
     const int playerMapObservationsOffset = playerMapObservationsSize / 2;
@@ -35,6 +37,8 @@ public partial class GameManager : Node3D
     // debug info
     bool visualizeObs = false;
     public bool VisualizeObs { get => visualizeObs; }
+    public bool ResetWhenRlAgentsDie { set => resetWhenRLAgentsDie = value; }
+
     int playerIndexToVisualize = 1;
     List<Node3D> obsNodes = new();
     List<List<StandardMaterial3D>> obsNodeMaterials = new();
@@ -548,16 +552,19 @@ public partial class GameManager : Node3D
             currentPos.X -= arenaSize - 1;
         }
 
-
+        gameHasRlAgents = false;
         for (int i = 0; i < players.Count; i++)
         {
-            players[i].playerIndex = i;
+            var player = players[i];
+            player.playerIndex = i;
             lastPlayerPositions[i] = new Vector3I(0, 0, 0);
             playerMapObservations.Add(new());
             playerBombObservations.Add(new());
             playerMapObservations[i].Resize(playerMapObservationsSize * playerMapObservationsSize);
             playerBombObservations[i].Resize(playerMapObservationsSize * playerMapObservationsSize);
 
+            if (player.IsRlAgent)
+                gameHasRlAgents = true;
         }
 
         if (!(bool)GetTree().Root.GetChild(0).FindChild("Sync", false).Get("should_connect_to_server"))
@@ -572,7 +579,7 @@ public partial class GameManager : Node3D
         {
             GD.Print("Player is out of bounds");
             playerIsOutOfBounds = false;
-            ForceEndGame();
+            RestartGame();
             return;
         }
 
@@ -710,7 +717,7 @@ public partial class GameManager : Node3D
 
         gameMode();
     }
-    public void ForceEndGame()
+    public void RestartGame()
     {
         for (int i = 0; i < players.Count; i++)
         {
@@ -941,7 +948,7 @@ public partial class GameManager : Node3D
         catch (Exception e)
         {
             GD.PrintErr($"Failed to update map cell in position {pos} (what = {what}, index = {index}), error:\n{e}");
-            ForceEndGame();
+            RestartGame();
         }
     }
     void UpdatePlayerCell(Vector3I pos, int teamID)
@@ -1162,18 +1169,16 @@ public partial class GameManager : Node3D
     {
         alivePlayerCount--;
         var deadPlayer = players[playerIndex];
-        for (int i = 0; i < players.Count; i++)
+        foreach (var player in players)
         {
-            var player = players[i];
             if (player.TeamID != deadPlayer.TeamID)
                 player.OnEnemyDeath();
         }
 
         if (alivePlayerCount <= 1)
         {
-            for (int i = 0; i < players.Count; i++)
+            foreach (var player in players)
             {
-                var player = players[i];
                 if (player.Lives > 0)
                 {
                     player.OnTeamWin();
@@ -1181,6 +1186,23 @@ public partial class GameManager : Node3D
                 }
             }
             StartGame();
+            return;
+        }
+
+        if (gameHasRlAgents && resetWhenRLAgentsDie)
+        {
+            bool isRlAgentAlive = false;
+            foreach (var player in players)
+            {
+                if (player.IsRlAgent && !player.IsDead)
+                {
+                    isRlAgentAlive = true;
+                    return;
+                }
+            }
+
+            if(!isRlAgentAlive)
+                RestartGame();
         }
     }
 

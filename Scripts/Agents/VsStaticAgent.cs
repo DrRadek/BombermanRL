@@ -88,7 +88,7 @@ public partial class VsStaticAgent : Character
         if (TimeWithoutUsingBomb > 30) // 15
         {
             AddReward(-1);
-            gameManager.ForceEndGame();
+            gameManager.RestartGame();
         }
     }
     public override void OnGetsCloserToEnemy()
@@ -99,6 +99,6 @@ public partial class VsStaticAgent : Character
     protected override void OnDeath()
     {
         AddReward(-0.5f);
-        gameManager.ForceEndGame();
+        gameManager.RestartGame();
     }
 }
