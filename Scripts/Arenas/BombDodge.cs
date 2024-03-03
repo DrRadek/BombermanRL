@@ -6,10 +6,10 @@ public partial class BombDodge : GameManager
     double bombSpawnDelay = 0.5;
     double bombDelta;
 
-    protected override void StartGame()
+    protected override void GameMode()
     {
         bombDelta = bombSpawnDelay;
-        StartGame(() => BombDodgeMode());
+        BombDodgeMode();
     }
 
     void BombDodgeMode()

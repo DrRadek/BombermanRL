@@ -12,6 +12,7 @@ players = [NodePath("Character"), NodePath("Character2")]
 [node name="Map" parent="." instance=ExtResource("2_p6e1t")]
 
 [node name="Character" parent="." instance=ExtResource("5_4gwu6")]
+isPlayer = true
 color = Color(0, 0, 1, 1)
 
 [node name="Character2" parent="." instance=ExtResource("5_4gwu6")]

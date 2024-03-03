@@ -53,8 +53,8 @@ public partial class DecisionTreeAgent : Character
             var safeCellDirection = gameManager.FindDirectionToNearestSafeCell(gridPos, playerIndex, out nearestSafeCell);
             if (nearestSafeCell.HasValue)
             {
-                if(!IsTileDangerous((Vector3I)safeCellDirection, GameManager.bombDetonationSpeed * 0.1f))
-                    SetMove((Vector3)safeCellDirection, out inputDir);
+                //if(!IsTileDangerous((Vector3I)safeCellDirection, GameManager.bombDetonationSpeed * 0.1f))
+                SetMove((Vector3)safeCellDirection, out inputDir);
             }
             else
             {

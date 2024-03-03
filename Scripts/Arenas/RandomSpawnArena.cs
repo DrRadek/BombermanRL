@@ -3,9 +3,14 @@ using System;
 
 public partial class RandomSpawnArena : GameManager
 {
-    protected override void StartGame()
+    //protected override void StartGame()
+    //{
+    //    StartGame(() => RandomSpawn());
+    //}
+
+    protected override void GameMode()
     {
-        StartGame(() => RandomSpawn());
+        RandomSpawn();
     }
 
     void RandomSpawn()

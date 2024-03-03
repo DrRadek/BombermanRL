@@ -19,6 +19,9 @@ public partial class Character : CharacterBody3D
     int myID;
 
     [Export]
+    int dataTypeID = 0;
+
+    [Export]
     bool isPlayer = false;
 
     [Export]
@@ -342,10 +345,7 @@ public partial class Character : CharacterBody3D
     }
     public void AddReward(float reward)
     {
-        if (aiController != null)
-        {
-            aiController.Set(aiPropertyName.reward, (float)aiController.Get(aiPropertyName.reward) + reward);
-        }
+        aiController?.Set(aiPropertyName.reward, (float)aiController.Get(aiPropertyName.reward) + reward);
 
     }
     protected void PlaceBomb()

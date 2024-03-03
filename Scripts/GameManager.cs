@@ -1,8 +1,10 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 // TODO: Convert other arenas to the new map node
 public partial class GameManager : Node3D
@@ -14,6 +16,19 @@ public partial class GameManager : Node3D
 
     [Export]
     public Godot.Collections.Array<Character> players = new();
+
+    //[Export] bool saveData = false;
+    //[Export] bool valueCount;
+    //[Export] string csvName;
+
+
+    bool isArenaShrinking = false;
+
+    const double firstShrinkToTime = 8;//60;
+    const double timeToShrink = 8; //30;
+    double shrinkDelta = firstShrinkToTime;
+    int currentArenaRadius;
+    int minArenaRadius = 4;
 
     public int maxPlayerCount = 4;
 
@@ -38,6 +53,7 @@ public partial class GameManager : Node3D
     bool visualizeObs = false;
     public bool VisualizeObs { get => visualizeObs; }
     public bool ResetWhenRlAgentsDie { set => resetWhenRLAgentsDie = value; }
+    public bool IsArenaShrinking { set => isArenaShrinking = value; }
 
     int playerIndexToVisualize = 1;
     List<Node3D> obsNodes = new();
@@ -107,6 +123,27 @@ public partial class GameManager : Node3D
         public const int collectible1 = 4;
         public const int friendlyPlayer = 5;
         public const int enemyPlayer = 6;
+    }
+
+    StringBuilder csvData = new();
+
+    void ShrinkArenaLogic(double delta)
+    {
+        if (minArenaRadius == currentArenaRadius)
+            return;
+
+        shrinkDelta -= delta;
+        if(shrinkDelta <= 0)
+        {
+            currentArenaRadius--;
+            shrinkDelta = timeToShrink;
+            CreateArenaBorders(currentArenaRadius, true);
+        }
+    }
+
+    bool IsPlayerInCell(Vector3I pos)
+    {
+        return playerMapSensor[GetGridIndex(pos)] != 0;
     }
 
     bool IsInnerCell(Vector3I pos)
@@ -451,7 +488,7 @@ public partial class GameManager : Node3D
         do
         {
             pos = GetRandomInnerCell();
-        } while (GetObjectInCell(pos) != GridIndexes.empty || playerMapSensor[GetGridIndex(pos)] != 0);
+        } while (GetObjectInCell(pos) != GridIndexes.empty || IsPlayerInCell(pos));
 
         return pos;
     }
@@ -461,8 +498,65 @@ public partial class GameManager : Node3D
         return gridmap.GetCellItem(GetGridPosition(position));
     }
 
+    bool CellHasNoPlayerAndBomb(Vector3I pos)
+    {
+        return !IsPlayerInCell(pos) && GetObjectInCell(pos) != GridIndexes.bomb;
+    }
+    void CreateArenaBorders(int arenaRadius, bool checkTileBelow = false)
+    {
+        if (!checkTileBelow)
+        {
+            Vector3I currentPos = new Vector3I(-arenaRadius, 0, -arenaRadius);
+            for (int x = -arenaRadius; x <= arenaRadius; x++)
+            {
+                var pos1 = new Vector3I(x, 0, -arenaRadius);
+                var pos2 = new Vector3I(x, 0, arenaRadius);
+
+
+                if (!checkTileBelow || CellHasNoPlayerAndBomb(pos1))
+                    UpdateMapCell(pos1, GridIndexes.indestructibleWall);
+                if (!checkTileBelow || CellHasNoPlayerAndBomb(pos2))
+                    UpdateMapCell(pos2, GridIndexes.indestructibleWall);
+            }
+            currentPos.X -= arenaSize;
+            for (int y = -arenaRadius + 1; y <= arenaRadius - 1; y++)
+            {
+                var pos1 = new Vector3I(-arenaRadius, 0, y);
+                var pos2 = new Vector3I(arenaRadius, 0, y);
+
+                if (!checkTileBelow || CellHasNoPlayerAndBomb(pos1))
+                    UpdateMapCell(pos1, GridIndexes.indestructibleWall);
+                if (!checkTileBelow || CellHasNoPlayerAndBomb(pos2))
+                    UpdateMapCell(pos2, GridIndexes.indestructibleWall);
+            }
+        }
+        else
+        {
+            for (int x = -arenaRadius; x <= arenaRadius; x++)
+            {
+                var pos1 = new Vector3I(x, 0, arenaRadius - Math.Abs(x));
+                var pos2 = new Vector3I(x, 0, -arenaRadius + Math.Abs(x));
+
+
+                if (IsInnerCell(pos1) &&  CellHasNoPlayerAndBomb(pos1))
+                    UpdateMapCell(pos1, GridIndexes.indestructibleWall);
+                if (IsInnerCell(pos2) && CellHasNoPlayerAndBomb(pos2))
+                    UpdateMapCell(pos2, GridIndexes.indestructibleWall);
+            }
+        }
+        
+    }
+
     public override void _Ready()
     {
+        //DataTable statistics = new DataTable();
+        //statistics.Columns.Add("vyhral", typeof(int));
+        //statistics.Columns.Add("delka_hry", typeof(double));
+
+        //CsvL
+
+        //DataTable.ToCsv
+
         gridmap = GetNode<GridMap>("Map/GridMap");
         if (visualizeObs)
         {
@@ -533,24 +627,7 @@ public partial class GameManager : Node3D
 
         lastPlayerPositions = new Vector3I[players.Count];
 
-        Vector3I currentPos = new Vector3I(-arenaOffset, 0, -arenaOffset);
-        for (int i = 0; i < arenaSize; i++)
-        {
-            UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.Z += arenaSize - 1;
-            UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.Z -= arenaSize - 1;
-            currentPos.X += 1;
-        }
-        currentPos.X -= arenaSize;
-        for (int i = 0; i < arenaSize - 2; i++)
-        {
-            currentPos.Z += 1;
-            UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.X += arenaSize - 1;
-            UpdateMapCell(currentPos, GridIndexes.indestructibleWall);
-            currentPos.X -= arenaSize - 1;
-        }
+        CreateArenaBorders(arenaOffset);
 
         gameHasRlAgents = false;
         for (int i = 0; i < players.Count; i++)
@@ -648,7 +725,8 @@ public partial class GameManager : Node3D
                 fire.Value.timeToDisappear -= delta;
                 if (fire.Value.timeToDisappear <= 0)
                 {
-                    UpdateMapCell(fire.Key, GridIndexes.empty);
+                    if(GetObjectInCell(fire.Key) != GridIndexes.indestructibleWall)
+                        UpdateMapCell(fire.Key, GridIndexes.empty);
                     fires.Remove(fire.Key);
                 }
             }
@@ -687,17 +765,24 @@ public partial class GameManager : Node3D
         //{
         //    GetObservationsAroundPlayer(0, 1, false, false);
         //}
+
+        if(isArenaShrinking)
+            ShrinkArenaLogic(delta);
     }
-    protected virtual void StartGame()
-    {
-        StartGame(() => DefaultGameMode());
-    }
-    protected void StartGame(Action gameMode)
+    //protected virtual void StartGame()
+    //{
+    //    StartGame(() => DefaultGameMode());
+    //}
+    protected void StartGame() //Action gameMode
     {
         // cleanup
         bombs.Clear();
         fires.Clear();
         Array.Clear(bombValues, 0, bombValues.Length);
+
+        // reset variables
+        shrinkDelta = firstShrinkToTime;
+        currentArenaRadius = arenaSize - 2;
 
         // cleanup
         for (int i = 0; i < playerMapSensor.Count; i++)
@@ -715,7 +800,8 @@ public partial class GameManager : Node3D
             }
         }
 
-        gameMode();
+        //gameMode();
+        GameMode();
     }
     public void RestartGame()
     {
@@ -801,7 +887,7 @@ public partial class GameManager : Node3D
         rating += bestRating;
         return rating;
     }
-    protected void DefaultGameMode()
+    protected virtual void GameMode()
     {
         AdddestructibleWalls();
         AddIndestructibleWalls();
