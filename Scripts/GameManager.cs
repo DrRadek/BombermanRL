@@ -6,6 +6,7 @@ using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static GameManager;
 // TODO: Convert other arenas to the new map node
 public partial class GameManager : Node3D
 {
@@ -21,8 +22,15 @@ public partial class GameManager : Node3D
     //[Export] bool valueCount;
     //[Export] string csvName;
 
+    public delegate void OnGameEndDelegate(GameEndInfo gameEndInfo);
+    public OnGameEndDelegate onGameEndCallback;
+
+    private int maxTotalGamesPlayed = -1;
+    int totalGamesPlayed = 0;
+    double gameTime = 0;
 
     bool isArenaShrinking = false;
+    int connectedRlAgentCount = 0;
 
     const double firstShrinkToTime = 8;//60;
     const double timeToShrink = 8; //30;
@@ -54,6 +62,8 @@ public partial class GameManager : Node3D
     public bool VisualizeObs { get => visualizeObs; }
     public bool ResetWhenRlAgentsDie { set => resetWhenRLAgentsDie = value; }
     public bool IsArenaShrinking { set => isArenaShrinking = value; }
+    public int ConnectedRlAgentCount {set => connectedRlAgentCount = value; }
+    public int MaxTotalGamesPlayed { set => maxTotalGamesPlayed = value; }
 
     int playerIndexToVisualize = 1;
     List<Node3D> obsNodes = new();
@@ -644,7 +654,8 @@ public partial class GameManager : Node3D
                 gameHasRlAgents = true;
         }
 
-        if (!(bool)GetTree().Root.GetChild(0).FindChild("Sync", false).Get("should_connect_to_server"))
+        //if (!(bool)GetTree().Root.GetChild(0).FindChild("Sync", false).Get("should_connect_to_server"))
+        if(connectedRlAgentCount == 0)
         {
             waitForServer = false;
             StartGame();
@@ -667,7 +678,7 @@ public partial class GameManager : Node3D
             for (int i = 0; i < players.Count; i++)
             {
                 var player = players[i];
-                if (!player.NeedsReset())
+                if (!player.NeedsReset() && player.AgentTypeID <= connectedRlAgentCount)
                 {
                     resetGame = false;
                     break;
@@ -681,6 +692,8 @@ public partial class GameManager : Node3D
             }
             return;
         }
+
+        gameTime += delta;
 
         try
         {
@@ -800,20 +813,35 @@ public partial class GameManager : Node3D
             }
         }
 
+        gameTime = 0;
+
         //gameMode();
         GameMode();
     }
-    public void RestartGame()
+    public void RestartGame(bool despawnPlayers = true)
     {
-        for (int i = 0; i < players.Count; i++)
-        {
-            var player = players[i];
-            player.Despawn();
+        onGameEndCallback?.Invoke(GetGameEndInfo());
+        totalGamesPlayed++;
+
+        if (despawnPlayers) {
+            for (int i = 0; i < players.Count; i++)
+            {
+                var player = players[i];
+                player.Despawn();
+            }
         }
 
-        StartGame();
+        if(totalGamesPlayed < maxTotalGamesPlayed || maxTotalGamesPlayed < 0)
+            StartGame();
 
     }
+    GameEndInfo gameEndInfo;
+    GameEndInfo GetGameEndInfo()
+    {
+        gameEndInfo.gameLength = gameTime;
+        return gameEndInfo;
+    }
+
     public bool PlaceBomb(Vector3 position, int playerIndex, out float rating)
     {
         rating = 0;
@@ -1268,10 +1296,11 @@ public partial class GameManager : Node3D
                 if (player.Lives > 0)
                 {
                     player.OnTeamWin();
+                    gameEndInfo.won = player.AgentTypeID;
                     player.Despawn();
                 }
             }
-            StartGame();
+            RestartGame(false);
             return;
         }
 

@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://erpx6vvrbj0t"]
+
+[ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="1_gb8bu"]
+
+[node name="SyncScene" type="Node"]
+script = ExtResource("1_gb8bu")
+action_repeat = 4

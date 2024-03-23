@@ -19,7 +19,7 @@ public partial class Character : CharacterBody3D
     int myID;
 
     [Export]
-    int dataTypeID = 0;
+    int agentTypeID = 1;
 
     [Export]
     bool isPlayer = false;
@@ -82,6 +82,7 @@ public partial class Character : CharacterBody3D
     protected double MaxTimeWithoutUsingBomb { get => maxTimeWithoutUsingBomb; set => maxTimeWithoutUsingBomb = value; }
     public int DefaultMaxLives { get => defaultMaxLives;protected set => defaultMaxLives = value; }
     public bool IsRlAgent { get => isRlAgent; }
+    public int AgentTypeID { get => agentTypeID; }
 
     Vector3 GetLocalPlayerPos()
     {
@@ -163,7 +164,12 @@ public partial class Character : CharacterBody3D
     {
         OnDefaultValuesSet();
         gameManager = GetParent<GameManager>();
-        aiController?.Call(aiMethodName.init, this);
+        if(aiController != null)
+        {
+            aiController?.Call(aiMethodName.init, this);
+            if (!isPlayer)
+                aiController.AddToGroup($"AGENT{agentTypeID}");
+        }
 
         material = (StandardMaterial3D)mesh.GetActiveMaterial(0);
         isRlAgent = IsPlayerRLAgent();

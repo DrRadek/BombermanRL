@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Character">
+    <Position X="5.5" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Properties" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>xUEw0SAYEJAkEeIgCAEFMoGCAAKFwwLbhIgwUZTJREE=</HashCode>
+      <FileName>Scripts\Character.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="aiMethodName">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Scripts\Character.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="aiPropertyName">
+    <Position X="13" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAQAQAAAACAAABAAAAAAAAAAAAAAAAAAAAAAAEI=</HashCode>
+      <FileName>Scripts\Character.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GameManager">
+    <Position X="3.5" Y="0.5" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Properties" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="GameManager.OnGameEndDelegate" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scripts\GameManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Class Name="GameManager.GridIndexes" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scripts\GameManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="GameManager.Bomb" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scripts\GameManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+      <Class Name="GameManager.Fire" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Scripts\GameManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Class>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>2AREzBJhhBJWgMwzBAREYACjJgmmoQEDMgVSm4hilQE=</HashCode>
+      <FileName>Scripts\GameManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ModeManager">
+    <Position X="12" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>QAAAAAIAAACCAAAQgAAAQQAABAAAAIAECAAgCQQAAAA=</HashCode>
+      <FileName>Scripts\ModeManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DecisionTreeAgent" Collapsed="true">
+    <Position X="7.5" Y="1" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AQAAAAAAAIIAAigEAAEICAAAAkCQAAAAAAQBAgAAAAA=</HashCode>
+      <FileName>Scripts\Agents\DecisionTreeAgent.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="VsStaticAgentPhase2" Collapsed="true">
+    <Position X="7.5" Y="1.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>gAAAgAAIAAAAAEAAAAAAAIAAAAAAAAAIAAAQEAAAQAA=</HashCode>
+      <FileName>Scripts\Agents\VsStaticAgentPhase2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RandomSpawnArena" Collapsed="true">
+    <Position X="1.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAEAAAA=</HashCode>
+      <FileName>Scripts\Arenas\RandomSpawnArena.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BombDodge" Collapsed="true">
+    <Position X="1.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAIABAAAAAAAAAAAAAAAAiAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>Scripts\Arenas\BombDodge.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EmptyArena" Collapsed="true">
+    <Position X="1.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>Scripts\Arenas\EmptyArena.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Struct Name="GameEndInfo">
+    <Position X="13.75" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAQAAA=</HashCode>
+      <FileName>Scripts\ModeManager.cs</FileName>
+    </TypeIdentifier>
+  </Struct>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

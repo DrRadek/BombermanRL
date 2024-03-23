@@ -5,15 +5,18 @@ extends Node
 @export var onnx_model_path := ""
 @export var should_use_model : bool
 @export var should_connect_to_server : bool
+@export var agent_group_name : String = "AGENT"
+@export var port = "11008"
 
 var game_has_rl_agents : bool = true
+
 
 @onready var start_time = Time.get_ticks_msec()
 
 const MAJOR_VERSION := "0"
 const MINOR_VERSION := "3" 
-const DEFAULT_PORT := "11008"
 const DEFAULT_SEED := "1"
+
 var stream : StreamPeerTCP = null
 var connected = false
 var message_center
@@ -153,7 +156,7 @@ func _extract_action_dict(action_array: Array):
 	return result
 
 func _get_agents():
-	agents = get_tree().get_nodes_in_group("AGENT")
+	agents = get_tree().get_nodes_in_group(agent_group_name)
 
 func _set_heuristic(heuristic):
 	for agent in agents:
@@ -216,7 +219,7 @@ func connect_to_server():
 	var ip = "127.0.0.1"
 	var port = _get_port()
 	var connect = stream.connect_to_host(ip, port)
-	stream.set_no_delay(true) # TODO check if this improves performance or not
+	#stream.set_no_delay(true) # TODO check if this improves performance or not
 	stream.poll()
 	# Fetch the status until it is either connected (2) or failed to connect (3)
 	while stream.get_status() < 2:
@@ -243,7 +246,7 @@ func _get_speedup():
 	return args.get("speedup", str(speed_up)).to_int()
 
 func _get_port():    
-	return args.get("port", DEFAULT_PORT).to_int()
+	return args.get("port", port).to_int()
 
 func _set_seed():
 	var _seed = args.get("env_seed", DEFAULT_SEED).to_int()
