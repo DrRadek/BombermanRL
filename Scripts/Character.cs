@@ -42,7 +42,7 @@ public partial class Character : CharacterBody3D
     bool waitAfterSpawn = true;
 
     int defaultMaxSpawnedBombs = 2;
-    int defaultBombStrength = 3;
+    int defaultBombRange = 3;
 
     int defaultMaxLives = 3;
     int lives = 0;
@@ -60,7 +60,7 @@ public partial class Character : CharacterBody3D
     const double bombCooldownAfterUse = 0.5f;
     int maxSpawnedBombs = 0;
     int spawnedBombs = 0;
-    int bombStrength = 0;
+    int bombRange = 0;
     double maxBombCooldown = Mathf.Max(bombCooldownAfterUse, bombCooldownAfterSpawn);
     double bombDelta = bombCooldownAfterSpawn;
     double timeWithoutUsingBomb = 0;
@@ -69,10 +69,10 @@ public partial class Character : CharacterBody3D
     public int Lives { get => lives; private set => lives = value; }
     public double InvulnerabilityTime { get => invulnerabilityTime; set => invulnerabilityTime = value; }
     public int SpawnedBombs { get => spawnedBombs; set => spawnedBombs = value; }
-    public int BombStrength { get => bombStrength; }
+    public int BombStrength { get => bombRange; }
     public int TeamID { get => teamID; }
     public int DefaultMaxSpawnedBombs { get => defaultMaxSpawnedBombs; protected set => defaultMaxSpawnedBombs = value; }
-    public int DefaultBombStrength { get => defaultBombStrength; protected set => defaultBombStrength = value; }
+    public int DefaultBombStrength { get => defaultBombRange; protected set => defaultBombRange = value; }
     public Vector3 PosChange { get => posChange; }
     public bool IsHuman { get => isHuman; private set => isHuman = value; }
     public bool IsDead { get => lives == 0; }
@@ -308,7 +308,7 @@ public partial class Character : CharacterBody3D
         Visible = true;
 
         maxSpawnedBombs = defaultMaxSpawnedBombs;
-        bombStrength = defaultBombStrength;
+        bombRange = defaultBombRange;
         spawnedBombs = 0;
         invulnerabilityTime = 0;
 

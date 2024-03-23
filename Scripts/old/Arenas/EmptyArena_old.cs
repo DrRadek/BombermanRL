@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class EmptyArena : GameManager
+public partial class EmptyArena_old : GameManager
 {
     protected override void GameMode()
     {

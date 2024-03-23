@@ -184,7 +184,7 @@ public partial class DecisionTreeAgent : Character
         Character closestPlayer = null;
         float closestPlayerDistance = float.PositiveInfinity;
 
-        foreach (var player in gameManager.players)
+        foreach (var player in gameManager.Players)
         {
             if (player.playerIndex == playerIndex || player.IsDead)
                 continue;

@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class BombDodgeAgent : Character
+public partial class BombDodgeAgent_old : Character
 {
     protected override void OnDefaultValuesSet()
     {

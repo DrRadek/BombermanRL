@@ -16,11 +16,9 @@
 script = ExtResource("1_ex73d")
 syncScene = ExtResource("2_ul01d")
 instanceCount = 8
-rlAgentTypeCount = 1
 speedUp = 8.0
 dataFileName = "DATA"
-dataToCollect = 300
-modeIndex = 5
+modeIndex = 3
 modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i"), ExtResource("6_qjvk5"), ExtResource("7_2v5cg"), ExtResource("8_eceiy")]
 
 [node name="Camera3D" type="Camera3D" parent="."]

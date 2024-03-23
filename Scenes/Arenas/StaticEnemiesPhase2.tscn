@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://Scripts/Arenas/RandomSpawnArena.cs" id="1_0jjqq"]
 [ext_resource type="PackedScene" uid="uid://b6nsbpapixaia" path="res://Scenes/map.tscn" id="2_mlorp"]
 [ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_qaysr"]
-[ext_resource type="Script" path="res://Scripts/Agents/VsStaticAgentPhase2.cs" id="4_6unm7"]
+[ext_resource type="Script" path="res://Scripts/Agents/RlAgent.cs" id="4_pwrwk"]
 [ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="5_2nhee"]
 
 [node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
@@ -13,7 +13,7 @@ players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3")
 [node name="Map" parent="." instance=ExtResource("2_mlorp")]
 
 [node name="Character" parent="." instance=ExtResource("3_qaysr")]
-script = ExtResource("4_6unm7")
+script = ExtResource("4_pwrwk")
 color = Color(0, 0, 1, 1)
 
 [node name="Character2" parent="." instance=ExtResource("5_2nhee")]

@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class VsStaticAgentPhase2 : Character
+public partial class RlAgent : Character
 {
     protected override void OnDefaultValuesSet()
     {
@@ -57,6 +57,6 @@ public partial class VsStaticAgentPhase2 : Character
     protected override void OnDeath()
     {
         AddReward(-0.5f);
-        gameManager.RestartGame();
+        //gameManager.RestartGame();
     }
 }

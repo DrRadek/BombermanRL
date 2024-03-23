@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class VsMovingAgents : VsStaticAgentPhase2
+public partial class VsMovingAgent_old : RlAgent
 {
     protected override void OnDeath()
     {

@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class MovementTest : Character
+public partial class MovementTest_old : Character
 {
     int collected = 0;
 

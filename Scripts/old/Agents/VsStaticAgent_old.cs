@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class VsStaticAgent : Character
+public partial class VsStaticAgent_old : Character
 {
     //protected override void OnDefaultValuesSet()
     //{

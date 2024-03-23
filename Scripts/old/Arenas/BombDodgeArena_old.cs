@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class BombDodge : GameManager
+public partial class BombDodgeArena_old : GameManager
 {
     double bombSpawnDelay = 0.5;
     double bombDelta;

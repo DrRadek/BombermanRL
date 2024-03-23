@@ -1,7 +1,7 @@
 using Godot;
 using System;
 
-public partial class VsTest : Character
+public partial class VsTest_old : Character
 {
     //public override void OnEnemyTeamHit()
     //{

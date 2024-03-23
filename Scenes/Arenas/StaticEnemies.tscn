@@ -1,10 +1,10 @@
 [gd_scene load_steps=12 format=3 uid="uid://m1kg1164y5d3"]
 
-[ext_resource type="Script" path="res://Scripts/Arenas/EmptyArena.cs" id="1_082gp"]
+[ext_resource type="Script" path="res://Scripts/old/Arenas/EmptyArena_old.cs" id="1_hr0m3"]
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="2_5c27v"]
 [ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_giofi"]
 [ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="4_cbi5y"]
-[ext_resource type="Script" path="res://Scripts/Agents/VsStaticAgent.cs" id="4_ts2kp"]
+[ext_resource type="Script" path="res://Scripts/old/Agents/VsStaticAgent_old.cs" id="4_gs07j"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_a80ve"]
 size = Vector3(17, 1, 17)
@@ -25,7 +25,7 @@ size = Vector3(1, 1, 15)
 [sub_resource type="Environment" id="Environment_lrv6o"]
 
 [node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
-script = ExtResource("1_082gp")
+script = ExtResource("1_hr0m3")
 players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
 
 [node name="Map" type="Node3D" parent="."]
@@ -106,7 +106,7 @@ environment = SubResource("Environment_lrv6o")
 [node name="Obs" type="Node3D" parent="."]
 
 [node name="Character" parent="." instance=ExtResource("3_giofi")]
-script = ExtResource("4_ts2kp")
+script = ExtResource("4_gs07j")
 
 [node name="Character2" parent="." instance=ExtResource("4_cbi5y")]
 teamID = 2

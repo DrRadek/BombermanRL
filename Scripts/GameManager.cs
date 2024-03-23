@@ -10,13 +10,13 @@ using static GameManager;
 // TODO: Convert other arenas to the new map node
 public partial class GameManager : Node3D
 {
-    GridMap gridmap;
+    GridMap gridMap;
 
     //[Export]
     //int playerCount = 4;
 
     [Export]
-    public Godot.Collections.Array<Character> players = new();
+    Godot.Collections.Array<Character> players = new();
 
     //[Export] bool saveData = false;
     //[Export] bool valueCount;
@@ -64,6 +64,7 @@ public partial class GameManager : Node3D
     public bool IsArenaShrinking { set => isArenaShrinking = value; }
     public int ConnectedRlAgentCount {set => connectedRlAgentCount = value; }
     public int MaxTotalGamesPlayed { set => maxTotalGamesPlayed = value; }
+    public Godot.Collections.Array<Character> Players { get => players; }
 
     int playerIndexToVisualize = 1;
     List<Node3D> obsNodes = new();
@@ -328,8 +329,8 @@ public partial class GameManager : Node3D
         dict["obs_around_player_bomb"] = bombObservations;
 
 
-        var sourcePlayer = players[sourcePlayerIndex];
-        if (sourcePlayer.IsDead || targetPlayerIndex >= players.Count)
+        var sourcePlayer = Players[sourcePlayerIndex];
+        if (sourcePlayer.IsDead || targetPlayerIndex >= Players.Count)
         {
             mapObservations.Fill(0);
             bombObservations.Fill(0);
@@ -337,7 +338,7 @@ public partial class GameManager : Node3D
         }
 
         var sourcePlayerTeamID = sourcePlayer.TeamID;
-        var targetPlayer = players[targetPlayerIndex];
+        var targetPlayer = Players[targetPlayerIndex];
         if (targetPlayer.IsDead)
         {
             mapObservations.Fill(0);
@@ -505,7 +506,7 @@ public partial class GameManager : Node3D
     public int GetObjectInCell(Vector3 position)
     {
         position.Y = 0;
-        return gridmap.GetCellItem(GetGridPosition(position));
+        return gridMap.GetCellItem(GetGridPosition(position));
     }
 
     bool CellHasNoPlayerAndBomb(Vector3I pos)
@@ -567,7 +568,7 @@ public partial class GameManager : Node3D
 
         //DataTable.ToCsv
 
-        gridmap = GetNode<GridMap>("Map/GridMap");
+        gridMap = GetNode<GridMap>("Map/GridMap");
         if (visualizeObs)
         {
             //obsNodeMaterials.Add(new());
@@ -592,7 +593,7 @@ public partial class GameManager : Node3D
             //    }
             //}
 
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
                 obsNodes.Add(new Node3D());
                 obsNode.AddChild(obsNodes[i]);
@@ -635,14 +636,14 @@ public partial class GameManager : Node3D
         mapSensor.Resize(arenaSize * arenaSize);
         playerMapSensor.Resize(arenaSize * arenaSize);
 
-        lastPlayerPositions = new Vector3I[players.Count];
+        lastPlayerPositions = new Vector3I[Players.Count];
 
         CreateArenaBorders(arenaOffset);
 
         gameHasRlAgents = false;
-        for (int i = 0; i < players.Count; i++)
+        for (int i = 0; i < Players.Count; i++)
         {
-            var player = players[i];
+            var player = Players[i];
             player.playerIndex = i;
             lastPlayerPositions[i] = new Vector3I(0, 0, 0);
             playerMapObservations.Add(new());
@@ -675,9 +676,9 @@ public partial class GameManager : Node3D
         {
 
             bool resetGame = true;
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
-                var player = players[i];
+                var player = Players[i];
                 if (!player.NeedsReset() && player.AgentTypeID <= connectedRlAgentCount)
                 {
                     resetGame = false;
@@ -749,15 +750,15 @@ public partial class GameManager : Node3D
             GD.Print($"Invalid fire: {e}, {bombs.Count}");
         }
 
-        for (int i = 0; i < players.Count; i++)
+        for (int i = 0; i < Players.Count; i++)
         {
             var lastPos = lastPlayerPositions[i];
             UpdatePlayerCell(lastPos, 0);
         }
 
-        for (int i = 0; i < players.Count; i++)
+        for (int i = 0; i < Players.Count; i++)
         {
-            var player = players[i];
+            var player = Players[i];
             if (player.IsDead)
                 continue;
 
@@ -824,9 +825,9 @@ public partial class GameManager : Node3D
         totalGamesPlayed++;
 
         if (despawnPlayers) {
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
-                var player = players[i];
+                var player = Players[i];
                 player.Despawn();
             }
         }
@@ -847,14 +848,14 @@ public partial class GameManager : Node3D
         rating = 0;
 
         Vector3I pos = GetGridPosition(position);
-        if (gridmap.GetCellItem(pos) != GridIndexes.empty)
+        if (gridMap.GetCellItem(pos) != GridIndexes.empty)
             return false;
 
         UpdateMapCell(pos, GridIndexes.bomb);
 
         bombs[pos] = new Bomb(bombDetonationSpeed, playerIndex);
 
-        rating = RateBombPlacement(pos, players[playerIndex].TeamID, playerIndex);
+        rating = RateBombPlacement(pos, Players[playerIndex].TeamID, playerIndex);
         return true;
     }
     float RateBombPlacement(Vector3I pos, int sourcePlayerTeamID, int sourcePlayerIndex)
@@ -897,7 +898,7 @@ public partial class GameManager : Node3D
 
 
         // is something in bomb radius? yes -> +0.4 if there is a player, +0.2 if there is a destructible wall
-        var things = GetThingsInBombRadius(pos, players[sourcePlayerIndex].BombStrength, sourcePlayerTeamID);
+        var things = GetThingsInBombRadius(pos, Players[sourcePlayerIndex].BombStrength, sourcePlayerTeamID);
         float bestRating = 0;
         foreach (var thing in things)
         {
@@ -944,10 +945,10 @@ public partial class GameManager : Node3D
     }
     protected void SpawnRandom()
     {
-        alivePlayerCount = players.Count;
-        for (int i = 0; i < players.Count; i++)
+        alivePlayerCount = Players.Count;
+        for (int i = 0; i < Players.Count; i++)
         {
-            var player = players[i];
+            var player = Players[i];
 
             var pos = GetRandomEmptyInnerCell();
             SpawnPlayer(pos, player);
@@ -962,15 +963,15 @@ public partial class GameManager : Node3D
     {
         HashSet<int> usedSpawnPositions = new();
 
-        alivePlayerCount = players.Count;
-        for (int i = 0; i < players.Count; i++)
+        alivePlayerCount = Players.Count;
+        for (int i = 0; i < Players.Count; i++)
         {
-            var player = players[i];
+            var player = Players[i];
 
             int spawnPositionIndex;
             do
             {
-                spawnPositionIndex = random.Next(0, players.Count);
+                spawnPositionIndex = random.Next(0, Players.Count);
             } while (usedSpawnPositions.Contains(spawnPositionIndex));
             usedSpawnPositions.Add(spawnPositionIndex);
 
@@ -1042,7 +1043,7 @@ public partial class GameManager : Node3D
         int index = 0;
         try
         {
-            gridmap.SetCellItem(pos, what);
+            gridMap.SetCellItem(pos, what);
 
             int valueToAdd;
             try
@@ -1105,7 +1106,7 @@ public partial class GameManager : Node3D
         usedBombs.Add(pos);
 
         int playerIndex = bomb.playerIndex;
-        Character player = players[playerIndex];
+        Character player = Players[playerIndex];
         int bombStrength = player.BombStrength;
 
         foreach (Vector3I direction in directions)
@@ -1137,7 +1138,7 @@ public partial class GameManager : Node3D
             var bomb = bombs[pos];
 
             int playerIndex = bomb.playerIndex;
-            Character player = players[playerIndex];
+            Character player = Players[playerIndex];
             int bombStrength = player.BombStrength;
 
             bombValues[GetGridIndex(pos)] = detonationTime;
@@ -1184,7 +1185,7 @@ public partial class GameManager : Node3D
 
 
         int playerIndex = bomb.playerIndex;
-        Character player = players[playerIndex];
+        Character player = Players[playerIndex];
         int teamID = player.TeamID;
         int bombStrength = player.BombStrength;
         player.SpawnedBombs = Math.Max(0, player.SpawnedBombs - 1);
@@ -1250,9 +1251,9 @@ public partial class GameManager : Node3D
         var fireTeamID = fire.teamID;
         if (fireTeamID == teamID)
         {
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
-                var currentPlayer = players[i];
+                var currentPlayer = Players[i];
                 if (currentPlayer.TeamID == teamID)
                 {
                     // GD.Print($"player from team {currentPlayer.TeamID} hit themselves");
@@ -1262,9 +1263,9 @@ public partial class GameManager : Node3D
         }
         else
         {
-            for (int i = 0; i < players.Count; i++)
+            for (int i = 0; i < Players.Count; i++)
             {
-                var currentPlayer = players[i];
+                var currentPlayer = Players[i];
                 if (currentPlayer.TeamID == fireTeamID)
                 {
                     //GD.Print($"player from team {currentPlayer.TeamID} hit someone from team {teamID}");
@@ -1282,8 +1283,8 @@ public partial class GameManager : Node3D
     public virtual void OnPlayerDeath(int playerIndex)
     {
         alivePlayerCount--;
-        var deadPlayer = players[playerIndex];
-        foreach (var player in players)
+        var deadPlayer = Players[playerIndex];
+        foreach (var player in Players)
         {
             if (player.TeamID != deadPlayer.TeamID)
                 player.OnEnemyDeath();
@@ -1291,7 +1292,7 @@ public partial class GameManager : Node3D
 
         if (alivePlayerCount <= 1)
         {
-            foreach (var player in players)
+            foreach (var player in Players)
             {
                 if (player.Lives > 0)
                 {
@@ -1307,7 +1308,7 @@ public partial class GameManager : Node3D
         if (gameHasRlAgents && resetWhenRLAgentsDie)
         {
             bool isRlAgentAlive = false;
-            foreach (var player in players)
+            foreach (var player in Players)
             {
                 if (player.IsRlAgent && !player.IsDead)
                 {

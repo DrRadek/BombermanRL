@@ -1,6 +1,6 @@
 [gd_scene load_steps=6 format=3 uid="uid://bjlat40nawjeq"]
 
-[ext_resource type="Script" path="res://Scripts/Agents/MovementTest.cs" id="1_wfvfh"]
+[ext_resource type="Script" path="res://Scripts/old/Agents/MovementTest_old.cs" id="1_1y05m"]
 [ext_resource type="Script" path="res://Scripts/AIController.gd" id="2_knhep"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ykg5p"]
@@ -19,7 +19,7 @@ material = SubResource("StandardMaterial3D_2fm4c")
 
 [node name="Character" type="CharacterBody3D" node_paths=PackedStringArray("aiController", "mesh", "collider")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-script = ExtResource("1_wfvfh")
+script = ExtResource("1_1y05m")
 aiController = NodePath("AIController3D")
 mesh = NodePath("MeshInstance3D")
 collider = NodePath("CollisionShape3D")
