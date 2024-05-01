@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=3 uid="uid://bmpupaqil342t"]
+
+[ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_5jyo8"]
+[ext_resource type="PackedScene" uid="uid://b6nsbpapixaia" path="res://Scenes/map.tscn" id="2_b037n"]
+[ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="3_2ljck"]
+[ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="4_muxc4"]
+[ext_resource type="Script" path="res://Scripts/Agents/RlAgent.cs" id="5_od3u1"]
+
+[node name="Game" type="Node3D" node_paths=PackedStringArray("players", "mapNodeReference")]
+script = ExtResource("1_5jyo8")
+players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
+showGameInfo = true
+mapNodeReference = NodePath("Map")
+
+[node name="Map" parent="." instance=ExtResource("2_b037n")]
+
+[node name="Character" parent="." node_paths=PackedStringArray("mapNodeReference") instance=ExtResource("3_2ljck")]
+agentTypeID = 0
+isPlayer = true
+color = Color(0, 0, 1, 1)
+showPlayerInfo = true
+mapNodeReference = NodePath("../Map")
+
+[node name="Character2" parent="." instance=ExtResource("4_muxc4")]
+script = ExtResource("5_od3u1")
+teamID = 2
+color = Color(1, 0, 0, 1)
+
+[node name="Character3" parent="." instance=ExtResource("4_muxc4")]
+script = ExtResource("5_od3u1")
+teamID = 3
+color = Color(0.627451, 0, 0, 1)
+
+[node name="Character4" parent="." instance=ExtResource("4_muxc4")]
+script = ExtResource("5_od3u1")
+teamID = 4
+color = Color(0.227451, 0, 0, 1)

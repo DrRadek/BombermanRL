@@ -1,0 +1,35 @@
+[gd_scene load_steps=7 format=3 uid="uid://bhvlne3xoow0h"]
+
+[ext_resource type="Script" path="res://Scripts/Arenas/RandomSpawnArena.cs" id="1_ckcm7"]
+[ext_resource type="PackedScene" uid="uid://b6nsbpapixaia" path="res://Scenes/map.tscn" id="2_4lqvm"]
+[ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_5gyph"]
+[ext_resource type="Script" path="res://Scripts/Agents/RlAgent2.cs" id="4_ykhb7"]
+[ext_resource type="PackedScene" uid="uid://cyuwbw74eo612" path="res://Scenes/characterNoAI.tscn" id="5_urltc"]
+[ext_resource type="Script" path="res://Scripts/Agents/DecisionTreeAgent.cs" id="6_as4cl"]
+
+[node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
+script = ExtResource("1_ckcm7")
+players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
+
+[node name="Map" parent="." instance=ExtResource("2_4lqvm")]
+
+[node name="Character" parent="." instance=ExtResource("3_5gyph")]
+script = ExtResource("4_ykhb7")
+color = Color(0, 0, 1, 1)
+
+[node name="Character2" parent="." instance=ExtResource("3_5gyph")]
+script = ExtResource("4_ykhb7")
+teamID = 2
+color = Color(0, 0.568627, 1, 1)
+
+[node name="Character3" parent="." instance=ExtResource("5_urltc")]
+script = ExtResource("6_as4cl")
+teamID = 3
+agentTypeID = 0
+color = Color(1, 0, 0, 1)
+
+[node name="Character4" parent="." instance=ExtResource("5_urltc")]
+script = ExtResource("6_as4cl")
+teamID = 4
+agentTypeID = 0
+color = Color(0.498039, 0, 0, 1)

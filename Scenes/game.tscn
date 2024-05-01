@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://dcabf6amrltr0"]
+[gd_scene load_steps=10 format=3 uid="uid://byyau6rejhm81"]
 
 [ext_resource type="MeshLibrary" uid="uid://cb1sp731cnjxg" path="res://meshLibrary.tres" id="1_52dkk"]
 [ext_resource type="Script" path="res://Scripts/GameManager.cs" id="1_ow57k"]

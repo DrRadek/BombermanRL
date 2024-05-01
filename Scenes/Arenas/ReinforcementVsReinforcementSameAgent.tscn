@@ -1,0 +1,31 @@
+[gd_scene load_steps=5 format=3 uid="uid://dw8b6eidk7q3l"]
+
+[ext_resource type="Script" path="res://Scripts/Arenas/RandomSpawnArena.cs" id="1_bm3r8"]
+[ext_resource type="PackedScene" uid="uid://b6nsbpapixaia" path="res://Scenes/map.tscn" id="2_oop1d"]
+[ext_resource type="PackedScene" uid="uid://dbn6ae72px7i" path="res://Scenes/Characters/character.tscn" id="3_s5f1o"]
+[ext_resource type="Script" path="res://Scripts/old/Agents/VsMovingAgent_old.cs" id="4_ijfwq"]
+
+[node name="Game" type="Node3D" node_paths=PackedStringArray("players")]
+script = ExtResource("1_bm3r8")
+players = [NodePath("Character"), NodePath("Character2"), NodePath("Character3"), NodePath("Character4")]
+
+[node name="Map" parent="." instance=ExtResource("2_oop1d")]
+
+[node name="Character" parent="." instance=ExtResource("3_s5f1o")]
+script = ExtResource("4_ijfwq")
+color = Color(0, 0, 1, 1)
+
+[node name="Character2" parent="." instance=ExtResource("3_s5f1o")]
+script = ExtResource("4_ijfwq")
+teamID = 2
+color = Color(0, 0, 0.498039, 1)
+
+[node name="Character3" parent="." instance=ExtResource("3_s5f1o")]
+script = ExtResource("4_ijfwq")
+teamID = 3
+color = Color(1, 0, 0, 1)
+
+[node name="Character4" parent="." instance=ExtResource("3_s5f1o")]
+script = ExtResource("4_ijfwq")
+teamID = 4
+color = Color(0.427451, 0, 0, 1)

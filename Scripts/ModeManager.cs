@@ -12,7 +12,11 @@ public partial class ModeManager : Node
 
     [Export] bool resetWhenRlAgentsDie = true;
 
+    [Export] bool resetWhenPlayersDie = false;
+
     [Export] bool isArenaShrinking = false;
+
+    [Export] bool randomizeArenaShrinking = false;
 
     [Export] int instanceCount = 1;
 
@@ -74,7 +78,9 @@ public partial class ModeManager : Node
             scene.Position = new Vector3(i * 20, 0, 0);
             scene.ConnectedRlAgentCount = rlAgentTypeCount;
             scene.ResetWhenRlAgentsDie = resetWhenRlAgentsDie;
+            scene.ResetWhenPlayersDie = resetWhenPlayersDie;
             scene.IsArenaShrinking = isArenaShrinking;
+            scene.RandomizeArenaShrinking = randomizeArenaShrinking;
             AddChild(scene);
 
             if (dataToCollect > 0)
@@ -95,6 +101,12 @@ public partial class ModeManager : Node
             syncNode.Set("port", $"{11008 + i + 1}");
             AddChild(syncNode);
             syncNodes.Add(syncNode);
+        }
+
+        if(rlAgentTypeCount == 0)
+        {
+            Engine.PhysicsTicksPerSecond = (int)(speedUp * 60);
+            Engine.TimeScale = speedUp * 1.0;
         }
     }
 

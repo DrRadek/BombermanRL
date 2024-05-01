@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://ccjo3p52kjfg"]
 
-[ext_resource type="PackedScene" uid="uid://dcabf6amrltr0" path="res://Scenes/game.tscn" id="1_eo2nv"]
+[ext_resource type="PackedScene" uid="uid://byyau6rejhm81" path="res://Scenes/game.tscn" id="1_eo2nv"]
 [ext_resource type="Script" path="res://addons/godot_rl_agents/sync.gd" id="2_t31g3"]
 
 [node name="Train" type="Node3D"]

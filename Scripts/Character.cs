@@ -27,6 +27,12 @@ public partial class Character : CharacterBody3D
     [Export]
     Color color = new(1,1,1);
 
+    [Export] bool showPlayerInfo = false;
+
+    [Export] MapNodeReference mapNodeReference;
+
+    Label playerLabel;
+
     public int playerIndex;
 
     protected GameManager gameManager;
@@ -83,6 +89,7 @@ public partial class Character : CharacterBody3D
     public int DefaultMaxLives { get => defaultMaxLives;protected set => defaultMaxLives = value; }
     public bool IsRlAgent { get => isRlAgent; }
     public int AgentTypeID { get => agentTypeID; }
+    public bool IsPlayer { get => isPlayer;}
 
     Vector3 GetLocalPlayerPos()
     {
@@ -160,8 +167,21 @@ public partial class Character : CharacterBody3D
         return obs;
     }
 
+    public Godot.Collections.Array<float> GetEmptyEnemyObs()
+    {
+        Godot.Collections.Array<float> obs = new();
+        obs.Resize(8);
+        obs.Fill(0);
+        return obs;
+    }
+
     public override void _Ready()
     {
+        if (showPlayerInfo)
+        {
+            playerLabel = mapNodeReference.playerLabel;
+        }
+
         OnDefaultValuesSet();
         gameManager = GetParent<GameManager>();
         if(aiController != null)
@@ -214,6 +234,7 @@ public partial class Character : CharacterBody3D
         else
         {
             timeWithoutUsingBomb += delta;
+
         }
 
         Vector3 velocity = Velocity;
@@ -287,6 +308,13 @@ public partial class Character : CharacterBody3D
         }
 
         bombDelta = Mathf.Max(bombDelta - delta, 0);
+
+        CheckTimeWithoutUsingBomb();
+
+        if (showPlayerInfo && playerLabel != null)
+        {
+            playerLabel.Text = $"Zivoty: {lives}\nVybuch bomby: {((maxTimeWithoutUsingBomb - timeWithoutUsingBomb) / maxTimeWithoutUsingBomb).ToString("0.00")}";
+        }
     }
     public virtual void Spawn(Vector3 pos)
     {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Net.NetworkInformation;
 using System.Reflection;
+using System.Runtime;
 using System.Text;
 using System.Threading.Tasks;
 using static GameManager;
@@ -18,6 +19,14 @@ public partial class GameManager : Node3D
     [Export]
     Godot.Collections.Array<Character> players = new();
 
+    List<int> winInfo;
+
+    [Export] bool showGameInfo = false;
+
+    [Export] MapNodeReference mapNodeReference;
+
+    Label gameInfoLabel;
+
     //[Export] bool saveData = false;
     //[Export] bool valueCount;
     //[Export] string csvName;
@@ -30,6 +39,7 @@ public partial class GameManager : Node3D
     double gameTime = 0;
 
     bool isArenaShrinking = false;
+    bool randomizeArenaShrinking = false;
     int connectedRlAgentCount = 0;
 
     const double firstShrinkToTime = 8;//60;
@@ -43,7 +53,9 @@ public partial class GameManager : Node3D
     bool waitForServer = true;
     bool playerIsOutOfBounds = false;
     bool resetWhenRLAgentsDie = false;
+    bool resetWhenPlayersDie = false;
     bool gameHasRlAgents = false;
+    bool gameHasPlayers = false;
 
     const int playerMapObservationsSize = 11;
     const int playerMapObservationsOffset = playerMapObservationsSize / 2;
@@ -61,7 +73,9 @@ public partial class GameManager : Node3D
     bool visualizeObs = false;
     public bool VisualizeObs { get => visualizeObs; }
     public bool ResetWhenRlAgentsDie { set => resetWhenRLAgentsDie = value; }
+    public bool ResetWhenPlayersDie { set => resetWhenPlayersDie = value; }
     public bool IsArenaShrinking { set => isArenaShrinking = value; }
+    public bool RandomizeArenaShrinking { set => randomizeArenaShrinking = value; }
     public int ConnectedRlAgentCount {set => connectedRlAgentCount = value; }
     public int MaxTotalGamesPlayed { set => maxTotalGamesPlayed = value; }
     public Godot.Collections.Array<Character> Players { get => players; }
@@ -301,7 +315,26 @@ public partial class GameManager : Node3D
         }
         return things;
     }
-    public Godot.Collections.Dictionary<string, Variant> GetObservationsAroundPlayer(int sourcePlayerIndex, int targetPlayerIndex)
+
+    public Godot.Collections.Dictionary<string, Variant> GetEmptyObservationsAroundPlayer()
+    {
+        Godot.Collections.Array<int> mapObservations = new();
+        Godot.Collections.Array<float> bombObservations = new();
+        Godot.Collections.Dictionary<string, Variant> dict = new();
+
+        mapObservations.Resize(enemyMapObservationsSize * enemyMapObservationsSize);
+        bombObservations.Resize(enemyMapObservationsSize * enemyMapObservationsSize);
+
+        dict["obs_around_player"] = mapObservations;
+        dict["obs_around_player_bomb"] = bombObservations;
+
+        mapObservations.Fill(0);
+        bombObservations.Fill(0);
+        return dict;
+
+    }
+
+        public Godot.Collections.Dictionary<string, Variant> GetObservationsAroundPlayer(int sourcePlayerIndex, int targetPlayerIndex)
     {
         Godot.Collections.Array<int> mapObservations; //= new();
         Godot.Collections.Array<float> bombObservations; // = new();
@@ -407,7 +440,7 @@ public partial class GameManager : Node3D
                 }
                 else
                 {
-                    targetPlayer.CheckTimeWithoutUsingBomb();
+                    // targetPlayer.CheckTimeWithoutUsingBomb();
                     targetPlayer.OnNormalTileTouched();
                 }
             }
@@ -560,15 +593,30 @@ public partial class GameManager : Node3D
 
     public override void _Ready()
     {
-        //DataTable statistics = new DataTable();
-        //statistics.Columns.Add("vyhral", typeof(int));
-        //statistics.Columns.Add("delka_hry", typeof(double));
+        winInfo = new(players.Count);
+        for (int i = 0; i < players.Count; i++)
+        {
+            winInfo.Add(0);
+        }
 
-        //CsvL
+        if (showGameInfo)
+        {
+            gameInfoLabel = mapNodeReference.gameInfoLabel;
+            UpdateGameInfoText();
+        }
 
-        //DataTable.ToCsv
 
-        gridMap = GetNode<GridMap>("Map/GridMap");
+       
+
+         //DataTable statistics = new DataTable();
+         //statistics.Columns.Add("vyhral", typeof(int));
+         //statistics.Columns.Add("delka_hry", typeof(double));
+
+         //CsvL
+
+         //DataTable.ToCsv
+
+         gridMap = GetNode<GridMap>("Map/GridMap");
         if (visualizeObs)
         {
             //obsNodeMaterials.Add(new());
@@ -641,6 +689,7 @@ public partial class GameManager : Node3D
         CreateArenaBorders(arenaOffset);
 
         gameHasRlAgents = false;
+        gameHasPlayers = false;
         for (int i = 0; i < Players.Count; i++)
         {
             var player = Players[i];
@@ -653,6 +702,8 @@ public partial class GameManager : Node3D
 
             if (player.IsRlAgent)
                 gameHasRlAgents = true;
+            if (player.IsPlayer)
+                gameHasPlayers = true;
         }
 
         //if (!(bool)GetTree().Root.GetChild(0).FindChild("Sync", false).Get("should_connect_to_server"))
@@ -782,6 +833,9 @@ public partial class GameManager : Node3D
 
         if(isArenaShrinking)
             ShrinkArenaLogic(delta);
+
+
+        
     }
     //protected virtual void StartGame()
     //{
@@ -795,8 +849,16 @@ public partial class GameManager : Node3D
         Array.Clear(bombValues, 0, bombValues.Length);
 
         // reset variables
+
         shrinkDelta = firstShrinkToTime;
         currentArenaRadius = arenaSize - 2;
+
+        if (randomizeArenaShrinking)
+        {
+            //GD.Print("randomize...");
+            isArenaShrinking = random.Next(0, 2) != 0;
+        }
+            
 
         // cleanup
         for (int i = 0; i < playerMapSensor.Count; i++)
@@ -1298,6 +1360,8 @@ public partial class GameManager : Node3D
                 {
                     player.OnTeamWin();
                     gameEndInfo.won = player.AgentTypeID;
+                    winInfo[player.playerIndex]++;
+                    UpdateGameInfoText();
                     player.Despawn();
                 }
             }
@@ -1313,12 +1377,41 @@ public partial class GameManager : Node3D
                 if (player.IsRlAgent && !player.IsDead)
                 {
                     isRlAgentAlive = true;
-                    return;
+                    break;
                 }
             }
 
             if(!isRlAgentAlive)
                 RestartGame();
+        }
+
+        if (gameHasPlayers && resetWhenPlayersDie)
+        {
+            bool isPlayerAlive = false;
+            foreach (var player in Players)
+            {
+                if (player.IsPlayer && !player.IsDead)
+                {
+                    isPlayerAlive = true;
+                    break;
+                }
+            }
+
+            if (!isPlayerAlive)
+                RestartGame();
+        }
+    }
+
+    private void UpdateGameInfoText()
+    {
+        if (showGameInfo)
+        {
+            string gameInfoText = "Vyhry\n";
+            for (int i = 0; i < winInfo.Count; i++)
+            {
+                gameInfoText += $"hrac {players[i].TeamID}: {winInfo[i]}\n";
+            }
+            gameInfoLabel.Text = gameInfoText;
         }
     }
 

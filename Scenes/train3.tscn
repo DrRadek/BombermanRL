@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://co4s6fgqqc0eu"]
+[gd_scene load_steps=14 format=3 uid="uid://co4s6fgqqc0eu"]
 
 [ext_resource type="Script" path="res://Scripts/ModeManager.cs" id="1_ex73d"]
 [ext_resource type="PackedScene" uid="uid://bjgbjnxs817l3" path="res://Scenes/Arenas/BaseGame.tscn" id="2_eo7nv"]
@@ -9,17 +9,23 @@
 [ext_resource type="PackedScene" uid="uid://cg2xti4w2rhen" path="res://Scenes/Arenas/DecisionTreeVsPlayer.tscn" id="6_qjvk5"]
 [ext_resource type="PackedScene" uid="uid://be2h88d8vntlv" path="res://Scenes/Arenas/ReinforcementVsDecisionTree2v2.tscn" id="7_2v5cg"]
 [ext_resource type="PackedScene" uid="uid://b3rp4nlhuc2x7" path="res://Scenes/Arenas/ReinforcementVsReinforcement.tscn" id="8_eceiy"]
+[ext_resource type="PackedScene" uid="uid://dw8b6eidk7q3l" path="res://Scenes/Arenas/ReinforcementVsReinforcementSameAgent.tscn" id="10_reee2"]
+[ext_resource type="PackedScene" uid="uid://bhvlne3xoow0h" path="res://Scenes/Arenas/Reinforcement(RlAgent2)VsDecisionTree2v2.tscn" id="11_7032u"]
+[ext_resource type="PackedScene" uid="uid://bmpupaqil342t" path="res://Scenes/Arenas/ReinforcementVsPlayer1V3.tscn" id="12_uuolg"]
 
 [sub_resource type="Environment" id="Environment_rpycj"]
 
 [node name="Train" type="Node3D"]
 script = ExtResource("1_ex73d")
 syncScene = ExtResource("2_ul01d")
-instanceCount = 8
-speedUp = 8.0
+useGlobalCamera = false
+resetWhenRlAgentsDie = false
+resetWhenPlayersDie = true
+rlAgentTypeCount = 1
 dataFileName = "DATA"
-modeIndex = 3
-modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i"), ExtResource("6_qjvk5"), ExtResource("7_2v5cg"), ExtResource("8_eceiy")]
+dataToCollect = 300
+modeIndex = 9
+modeScenes = [ExtResource("2_eo7nv"), ExtResource("3_pgbmp"), ExtResource("4_shpct"), ExtResource("5_k3r4i"), ExtResource("6_qjvk5"), ExtResource("7_2v5cg"), ExtResource("8_eceiy"), ExtResource("10_reee2"), ExtResource("11_7032u"), ExtResource("12_uuolg")]
 
 [node name="Camera3D" type="Camera3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 27.307, 22.806, 18.883)
