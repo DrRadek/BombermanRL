@@ -18,6 +18,9 @@
 4. Příkazem `gdrl` spustíte učení
     - Parametry z GDRL: příkaz `gdrl -h`
     - Parametry ze Sample Factory: https://www.samplefactory.dev/02-configuration/cfg-params
-    - Příklad: `gdrl --experiment=VsStatic11 --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --batched_sampling=False --device=cpu --train_for_env_steps=100000000 --recurrence=32 --rollout=64 --num_workers=6 --viz`
+    - Příklad: `gdrl --experiment=VsDecisionTreeV4 --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --batched_sampling=False --device=cpu --train_for_env_steps=100000000 --num_workers=4 --recurrence=128 --rollout=128 --use_rnn=True --num_policies=2 --pbt_mix_policies_in_one_env=True --viz`
+
 5. Spuštění již naučeného modelu
     - Export modelu momentálně není podporovaný, použijte `--eval` u `gdrl`
+    - Příklad: `gdrl --experiment=VsDecisionTreeV4 --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=1 --batched_sampling=True --device=cpu --num_workers=1 --recurrence=128 --use_rnn=True --viz --eval`
+
