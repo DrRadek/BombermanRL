@@ -1,5 +1,0 @@
-gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --device=cpu --batched_sampling=False --train_for_env_steps=10000000 --use_rnn=True --recurrence=32 --viz --num_workers=4 --lr_schedule=kl_adaptive_epoch --with_pbt=True --pbt_period_env_steps=1000000 --pbt_start_mutation=4000000 --num_policies=4
-
-gdrl --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --device=cpu --batched_sampling=False --train_for_env_steps=100000000 --use_rnn=True --recurrence=32 --viz --num_workers=4 --lr_schedule=kl_adaptive_epoch --with_pbt=True --pbt_period_env_steps=1000000 --pbt_start_mutation=4000000 --experiment=VsStatic2
-
-gdrl --experiment=VsStatic11 --trainer=sf --env=gdrl --env_path=./BombermanRL --speedup=4 --batched_sampling=False --device=cpu --train_for_env_steps=100000000 --recurrence=32 --rollout=64 --num_workers=6 --viz
