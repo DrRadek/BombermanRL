@@ -20,6 +20,6 @@ mono_crash.*.json
 # Other ignores
 Learning
 Export/*
-!Export/Linux
-!Export/Linux/*
+#!Export/Linux
+#!Export/Linux/*
 Export/Linux/logs
